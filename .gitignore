@@ -1,0 +1,9 @@
+# MQ runtime config written by ConfigService
+config/*.lua
+*.log
+
+# Editor / OS noise
+.DS_Store
+*.swp
+.vscode/
+.idea/

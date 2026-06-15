@@ -1,0 +1,3 @@
+[submodule ".meta/mq-definitions"]
+	path = .meta/mq-definitions
+	url = https://github.com/macroquest/mq-definitions.git
