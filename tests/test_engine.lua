@@ -21,14 +21,20 @@ H.eq(s2.directive, 'PICKUP', 'at giver, directive is PICKUP')
 H.ok(H.commandSeen(state.commands, '/say Hail'), 'pickup hails the giver')
 
 -- The task now exists with an open objective -> advance to combat handoff.
+-- doprog must pick the RIGHT mob: skip the mephit (doesn't count), target the
+-- Brass Phoenix mob, and only hand off once it is in range.
 state.tasks['Soldier of Air'] = { id = 1, objectives = { 'Open' } }
+state.nearest = {
+    { id = 50, name = 'a fire mephit' },          -- excluded: doesn't count
+    { id = 100, name = 'a brass phoenix soldier' }, -- the valid target
+}
+state.spawnDist[100] = 10 -- already in engage range
 local s3 = app.state:tick()
-H.eq(s3.directive, 'NEED_COMBAT', 'with task in hand, hand off to combat')
+H.eq(s3.directive, 'NEED_COMBAT', 'with a valid in-range target, hand off to combat')
 H.ok(app.state:shouldEngage(), 'shouldEngage() is true during NEED_COMBAT')
--- Soldier of Air is an area/objective-driven kill: no specific spawn is
--- surfaced; the host combat system selects what to kill while doprog watches
--- the objective counter.
-H.ok(s3.target == nil, 'area objective surfaces no specific target (host selects)')
+H.ok(s3.target ~= nil and s3.target.id == 100, 'doprog surfaces the Brass Phoenix mob (id 100)')
+H.ok(H.commandSeen(state.commands, '/target id 100'), 'doprog targets the valid mob')
+H.ok(not H.commandSeen(state.commands, '/target id 50'), 'doprog never targets the mephit')
 
 -- doprog must NEVER fight: no attack/assist commands should ever be issued.
 H.ok(not H.commandSeen(state.commands, '/attack'), 'doprog never issues /attack')

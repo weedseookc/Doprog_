@@ -27,7 +27,11 @@ return Quest.new({
     steps = {
         S.pickup({ zone = 'stratos', npc = GIVER, taskName = 'Soldier of Air', request = 'deal with',
             desc = 'accept Soldier of Air (say "deal with")' }),
+        -- doprog picks the target: nearest deep-zone NPC that is NOT a mephit or
+        -- air elemental (those don't count), and closes the distance to it so the
+        -- host doesn't grind the wrong mobs by the quest giver.
         S.combat({ zone = 'stratos', taskName = 'Soldier of Air', objective = 1,
+            target = { npc = true, radius = 1000, exclude = { 'mephit', 'air elemental', 'elemental', 'twister', 'breeze' } },
             desc = 'defeat 5 Brass Phoenix Brigade (NOT mephits/air elementals)' }),
         S.handin({ zone = 'stratos', npc = GIVER, taskName = 'Soldier of Air',
             desc = 'speak with Grieving Soul Scent to finish' }),

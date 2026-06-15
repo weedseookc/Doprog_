@@ -17,7 +17,10 @@ function M.new()
             pctHps = 100, hovering = false, xtarget = 0,
             x = 0, y = 0, z = 0, heading = 0,
         },
-        spawnId = 0,            -- value returned by Spawn(...).ID()
+        spawnId = 0,            -- value returned by Spawn(<search>).ID()
+        spawnNames = {},        -- id -> name (for Spawn(id).Name())
+        spawnDist = {},         -- id -> distance (for Spawn(id).Distance3D())
+        nearest = {},           -- ordered list { {id=, name=}, ... } for NearestSpawn
         targetId = 0,
         nav = { active = false, pathExists = true },
         tasks = {},             -- name -> { id=number, objectives={'Done','Open',...} }
@@ -45,7 +48,25 @@ function M.new()
         Z = function() return state.me.z end,
         Heading = { Degrees = function() return state.me.heading end },
     }
-    TLO.Spawn = function(_) return { ID = function() return state.spawnId end } end
+    TLO.Spawn = function(arg)
+        local id, name, dist
+        if type(arg) == 'number' then
+            id, name, dist = arg, state.spawnNames[arg] or 'a mob', state.spawnDist[arg] or 0
+        else
+            id = state.spawnId
+            name, dist = state.spawnNames[id] or 'a mob', state.spawnDist[id] or 0
+        end
+        return {
+            ID = function() return id end,
+            Name = function() return name end,
+            Distance3D = function() return dist end,
+        }
+    end
+    TLO.NearestSpawn = function(i, _)
+        local e = state.nearest[i]
+        if not e then return { ID = function() return 0 end, Name = function() return '' end } end
+        return { ID = function() return e.id end, Name = function() return e.name end }
+    end
     TLO.Target = { ID = function() return state.targetId end }
     TLO.Navigation = {
         Active = function() return state.nav.active end,

@@ -169,6 +169,60 @@ function MqAdapter:findSpawn(query)
     return nil
 end
 
+---@param name string
+---@param excludes string[]
+---@return boolean
+local function isExcluded(name, excludes)
+    local lower = name:lower()
+    for _, bad in ipairs(excludes) do
+        if lower:find(bad:lower(), 1, true) then return true end
+    end
+    return false
+end
+
+--- Find the nearest spawn matching `query`, skipping any whose name contains an
+--- `exclude` substring. This is how doprog targets the *right* mob for a quest
+--- (e.g. "deep in the zone, but not mephits or air elementals") instead of
+--- leaving the combat tool to guess. Returns id and name, or nil.
+---@param query doprog.SpawnQuery
+---@return integer?, string?
+function MqAdapter:findSpawnFiltered(query)
+    if query.id then return query.id, query.name end
+    if not query.exclude or #query.exclude == 0 then
+        local id = self:findSpawn(query)
+        if id then
+            local nm = safe(function() return self._mq.TLO.Spawn(id).Name() end, query.name)
+            return id, nm
+        end
+        return nil
+    end
+    local search = self:_spawnSearch(query)
+    local scan = query.scan or 25
+    for i = 1, scan do
+        local spawn = self._mq.TLO.NearestSpawn(i, search)
+        local id = safe(function() return spawn.ID() end, 0)
+        if not id or id <= 0 then break end
+        local nm = safe(function() return spawn.Name() end, '')
+        if nm ~= '' and not isExcluded(nm, query.exclude) then
+            return id, nm
+        end
+    end
+    return nil
+end
+
+--- Distance (3D) from the player to a spawn id, or a large number if unknown.
+---@param id integer
+---@return number
+function MqAdapter:spawnDistance(id)
+    return safe(function() return self._mq.TLO.Spawn(id).Distance3D() end, 1e9)
+end
+
+--- Target a spawn by id.
+---@param id integer
+function MqAdapter:target(id)
+    self:cmdf('/target id %d', id)
+end
+
 ---@return integer
 function MqAdapter:targetId()
     return safe(function() return self._mq.TLO.Target.ID() end, 0)

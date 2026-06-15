@@ -1,28 +1,33 @@
 --- doprog.steps.combat_step
 ---
---- THE handoff. doprog does not fight. This step is the seam where the host
---- combat system (RGMercs / KissAssist / custom) takes over.
+--- THE handoff — but doprog does the *target selection*, because it is the only
+--- thing that knows the quest rules. A combat tool left to its own devices will
+--- happily grind mephits that don't count, or never leave the quest giver. So
+--- this step:
 ---
---- TBL task objectives are usually "defeat N of <faction> in <area>" rather than
---- a single named mob, so a CombatStep has two flavours:
+---   1. picks a VALID target via the SpawnQuery (inclusion by name/npc/radius,
+---      with `exclude` substrings to skip mobs that don't count),
+---   2. navigates the lead to it if it is out of range (going "deep into the
+---      zone" as needed) — host holds because shouldEngage() is false while we
+---      travel,
+---   3. /targets it and advertises NEED_COMBAT so the host kills the *right* mob,
+---   4. watches the task objective counter and advances when it ticks over.
 ---
----   * TARGETED — `target` is a SpawnQuery for a specific mob (named boss, a
----     particular spawn). doprog resolves it and surfaces its id.
----   * AREA/OBJECTIVE-DRIVEN — no `target`; doprog advertises NEED_COMBAT with no
----     specific spawn and lets the host pick what to kill, while watching the
----     task objective counter to know when the step is done.
----
---- Either way doprog only advertises and waits; it never issues an attack.
---- Completion is read from the task objective (or, for targeted kills without a
---- task, from the target no longer existing).
+--- For objectives with no nameable target (pure "defeat N in this area"), pass no
+--- `target` and an optional `loc` camp; doprog moves to the camp and advertises
+--- NEED_COMBAT with no specific spawn, letting the host pick among local mobs.
+--- doprog still never issues an attack.
 
 local Step = require('doprog.steps.step')
+
+local ENGAGE_RANGE = 50 -- units; within this we hand off, beyond it we close in
 
 ---@class doprog.CombatStep : doprog.Step
 ---@field private _target doprog.SpawnQuery?
 ---@field private _taskName string?
 ---@field private _objective integer?
 ---@field private _camp doprog.Vec3?
+---@field private _engageRange number
 local CombatStep = Step.extend({})
 CombatStep.__index = CombatStep
 
@@ -36,6 +41,7 @@ function CombatStep.new(opts)
     self._taskName = opts.taskName
     self._objective = opts.objective
     self._camp = opts.loc
+    self._engageRange = opts.engageRange or ENGAGE_RANGE
     return setmetatable(self, CombatStep)
 end
 
@@ -48,8 +54,39 @@ function CombatStep:isComplete(ctx)
     if self._taskName then
         return ctx.task:isComplete(self._taskName)
     end
-    -- Targeted kill with no task wiring: done once no matching spawn remains.
     return self._target ~= nil and ctx.mq:findSpawn(self._target) == nil
+end
+
+--- Drive a nameable target: select, close distance, target, hand off.
+---@private
+---@param ctx doprog.StepContext
+---@return doprog.StepResult
+function CombatStep:_driveTarget(ctx)
+    local id, name = ctx.mq:findSpawnFiltered(self._target)
+    if not id then
+        -- No valid target in range. Move to the camp to look, else wait.
+        if self._camp and not ctx.nav:to(self._camp) then
+            ctx.eqbc:followLead()
+            return Step.running('TRAVEL', 'moving to find targets for ' .. self.desc)
+        end
+        return Step.running('WAIT', 'no valid target yet for ' .. self.desc)
+    end
+
+    -- doprog owns targeting: lock the correct mob so the host attacks it.
+    ctx.mq:target(id)
+
+    local dist = ctx.mq:spawnDistance(id)
+    if dist > self._engageRange then
+        -- Close the distance ourselves; host holds (shouldEngage is false).
+        ctx.eqbc:followLead()
+        ctx.mq:navTo({ id = id })
+        return Step.running('TRAVEL', ('closing on %s for %s'):format(name or 'target', self.desc))
+    end
+
+    if ctx.nav:isActive() then ctx.nav:stop() end
+    local result = Step.running('NEED_COMBAT', self.desc)
+    result.target = { id = id, name = name }
+    return result
 end
 
 ---@param ctx doprog.StepContext
@@ -63,22 +100,17 @@ function CombatStep:execute(ctx)
         return Step.done('TRAVEL')
     end
 
-    -- Optionally move to the camp/pull spot before handing off.
-    if self._camp and not ctx.nav:to(self._camp) then
-        return Step.running('TRAVEL', 'moving to camp for ' .. self.desc)
+    if self._target then
+        return self:_driveTarget(ctx)
     end
 
-    local result = Step.running('NEED_COMBAT', self.desc)
-    if self._target then
-        local id = ctx.mq:findSpawn(self._target)
-        if not id then
-            -- Specific target not up (respawn/repop). Wait, don't advance.
-            return Step.running('WAIT', 'awaiting spawn for ' .. self.desc)
-        end
-        result.target = { id = id, name = self._target.name }
+    -- Area/objective-driven with no nameable target: optionally camp, then let
+    -- the host select among local mobs while we watch the objective.
+    if self._camp and not ctx.nav:to(self._camp) then
+        ctx.eqbc:followLead()
+        return Step.running('TRAVEL', 'moving to camp for ' .. self.desc)
     end
-    -- Area/objective-driven: target stays nil and the host selects what to kill.
-    return result
+    return Step.running('NEED_COMBAT', self.desc)
 end
 
 return CombatStep

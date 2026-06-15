@@ -40,6 +40,9 @@
 ---@field xtargets fun(self: doprog.IMqAdapter): integer
 ---@field loc fun(self: doprog.IMqAdapter): doprog.Vec3
 ---@field findSpawn fun(self: doprog.IMqAdapter, query: doprog.SpawnQuery): integer? # spawn id or nil
+---@field findSpawnFiltered fun(self: doprog.IMqAdapter, query: doprog.SpawnQuery): integer?, string?
+---@field spawnDistance fun(self: doprog.IMqAdapter, id: integer): number
+---@field target fun(self: doprog.IMqAdapter, id: integer)
 ---@field targetId fun(self: doprog.IMqAdapter): integer
 ---@field navActive fun(self: doprog.IMqAdapter): boolean
 ---@field navPathExists fun(self: doprog.IMqAdapter, query: doprog.SpawnQuery|doprog.Vec3): boolean

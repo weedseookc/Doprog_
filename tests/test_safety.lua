@@ -31,12 +31,10 @@ end
 do
     local app, state = H.app()
     state.zone = 'stratos'
-    state.spawnId = 100
-    state.tasks['Soldier of Air'] = { id = 1, objectives = { 'Open' } }
-    -- get past pickup
-    app.state:tick() -- pickup accept
+    state.tasks['Soldier of Air'] = { id = 1, objectives = { 'Open' } } -- skip pickup
+    state.nearest = { { id = 100, name = 'a brass phoenix soldier' } }
+    state.spawnDist[100] = 10 -- in engage range
     state.me.combatState = 'COMBAT'
     local s = app.state:tick()
-    H.ok(s.directive == 'NEED_COMBAT' or s.directive == 'PICKUP',
-        'combat step is not blocked by the safety gate (got ' .. s.directive .. ')')
+    H.eq(s.directive, 'NEED_COMBAT', 'combat step is not blocked by the safety gate')
 end

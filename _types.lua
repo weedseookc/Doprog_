@@ -22,11 +22,13 @@
 --- A declarative description of a spawn to find/target. Resolved by MqAdapter
 --- into a concrete spawn id at runtime. At least one of the fields is required.
 ---@class doprog.SpawnQuery
----@field name? string        # exact or partial spawn name
+---@field name? string        # exact or partial spawn name (inclusion)
 ---@field id? number          # explicit spawn id (wins over everything else)
 ---@field npc? boolean        # restrict to NPCs
 ---@field radius? number      # search radius from the player, in units
 ---@field body? string        # body type filter (e.g. "Giant")
+---@field exclude? string[]   # reject candidates whose name contains any of these (case-insensitive)
+---@field scan? integer       # how many nearest candidates to consider when filtering (default 25)
 
 -------------------------------------------------------------------------------
 -- Engine state vocabulary
