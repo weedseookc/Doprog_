@@ -54,7 +54,8 @@
 -------------------------------------------------------------------------------
 
 ---@class doprog.INavService
----@field to fun(self: doprog.INavService, dest: doprog.Vec3|doprog.SpawnQuery): boolean # begins/continues nav; true once arrived
+--- `to` begins/continues nav toward dest and returns true once arrived.
+---@field to fun(self: doprog.INavService, dest: doprog.Vec3|doprog.SpawnQuery): boolean
 ---@field stop fun(self: doprog.INavService)
 ---@field isActive fun(self: doprog.INavService): boolean
 ---@field reset fun(self: doprog.INavService) # clear stuck-tracking bookkeeping
