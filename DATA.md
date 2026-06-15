@@ -32,7 +32,19 @@ The graph shape (which zones connect) is correct; only these values are blank:
 - [ ] **Aalishai** "Enter Mearatas" giver — eqresource lists it ambiguously
       ("Ring or Blazing Sorrows Darkness"); encoded as *Blazing Sorrows Darkness*.
 
-## 3. In-game tuning that can't be pre-baked
+## 3. Combat positioning locs (the only blanks in the mechanics)
+
+These mission/trial positioning spots are encoded as real `doprog.Mechanic`
+reactions but need their `/loc` filled in-game (search `TODO(calibrate)`). The
+flee mechanics (Iron Heart boulder, etc.) already work without any loc.
+
+- [ ] **Prince Ralaifin** — `HIDE_LOC` (the valley LoS-break spot for the
+      "reaching rapture" emote) and `AURA_LOC` (where the tank holds in the fire
+      aura). `zones/empyr/mission_prince_ralaifin.lua`.
+- [ ] **Trial of the Wending Ways** — `BRAZIER` loc(s) to drag the fire boss to.
+      `zones/plane_of_smoke/trials/trial_wending_ways.lua`.
+
+## 5. In-game tuning that can't be pre-baked
 
 - **Trial of Three / Wending Ways** boss order is determined by clue lines /
   portal counts at run time (randomized). doprog targets the bosses; a clue/
@@ -44,7 +56,7 @@ The graph shape (which zones connect) is correct; only these values are blank:
 - **Faction/sneak gates** (e.g. Earning One's Place, several "say to NPC" steps)
   are noted in comments but not automated; ensure standing or use sneak.
 
-## 4. Task-name spelling
+## 6. Task-name spelling
 
 Quest completion is matched by name (`completionTask`). If a `taskExists` lookup
 ever fails in-game, reconcile the spelling/capitalization in the quest file with

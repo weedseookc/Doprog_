@@ -79,4 +79,30 @@
 ---| '"mission"'
 ---| '"task"'
 
+-------------------------------------------------------------------------------
+-- Combat positioning mechanics (doprog handles movement; host handles damage)
+-------------------------------------------------------------------------------
+
+--- How doprog repositions the lead in response to a fight mechanic.
+---@alias doprog.MechanicReact
+---| '"flee"'    # run away from `spawn` by `distance` (AE, boulder, follow-target)
+---| '"moveTo"'  # nav the lead to `loc` (safe spot)
+---| '"hide"'    # nav to `loc` to break line-of-sight on a gaze/rapture emote
+---| '"aura"'    # nav the lead into a damaging aura / required floor spot at `loc`
+---| '"drag"'    # nav the lead to `loc`, dragging the targeted mob there (braziers)
+
+--- A single positioning rule attached to a CombatStep. If `emote` is set, the
+--- reaction only fires while that emote text has been seen recently; otherwise it
+--- is a standing position to hold for the whole fight. Reactions that need a
+--- `loc` are no-ops until the loc is calibrated in-game; `flee` works immediately
+--- because it computes an escape vector from the live spawn position.
+---@class doprog.Mechanic
+---@field desc string
+---@field react doprog.MechanicReact
+---@field emote? string                # substring of the trigger emote line
+---@field window? number               # seconds the emote stays "active" (default 8)
+---@field loc? doprog.Vec3             # destination for moveTo/hide/aura/drag
+---@field spawn? doprog.SpawnQuery     # what to flee from (react == "flee")
+---@field distance? number             # flee distance in units (default 40)
+
 return {}

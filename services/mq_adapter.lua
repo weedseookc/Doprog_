@@ -283,4 +283,28 @@ function MqAdapter:itemCount(itemName)
     return safe(function() return self._mq.TLO.FindItemCount('=' .. itemName)() end, 0)
 end
 
+--- 3D world location of a spawn id (for flee-vector math), zeros if unknown.
+---@param id integer
+---@return doprog.Vec3
+function MqAdapter:spawnLoc(id)
+    return {
+        y = safe(function() return self._mq.TLO.Spawn(id).Y() end, 0),
+        x = safe(function() return self._mq.TLO.Spawn(id).X() end, 0),
+        z = safe(function() return self._mq.TLO.Spawn(id).Z() end, 0),
+    }
+end
+
+--- Register an MQ text event (emote watcher). No-op if the binding is absent.
+---@param name string
+---@param pattern string
+---@param callback fun(line: string, ...: any)
+function MqAdapter:registerEvent(name, pattern, callback)
+    if self._mq.event then self._mq.event(name, pattern, callback) end
+end
+
+--- Process queued events/emotes.
+function MqAdapter:doEvents()
+    if self._mq.doevents then self._mq.doevents() end
+end
+
 return MqAdapter

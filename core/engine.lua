@@ -31,6 +31,7 @@ Engine.__index = Engine
 ---@field safety doprog.SafetyService
 ---@field eqbc doprog.EqbcService
 ---@field task doprog.TaskService
+---@field mech doprog.MechanicsWatcher
 ---@field registry doprog.QuestRegistry
 ---@field logger doprog.LoggerFactory
 
@@ -47,6 +48,7 @@ function Engine.new(deps)
         safety = deps.safety,
         eqbc = deps.eqbc,
         task = deps.task,
+        mech = deps.mech,
         log = deps.logger:forModule('Step'),
     }
     return setmetatable({
@@ -91,6 +93,9 @@ end
 --- Advance the state machine one frame.
 ---@return doprog.EngineState
 function Engine:tick()
+    -- Process emote events so combat positioning mechanics can react this frame.
+    self._ctx.mech:poll()
+
     if not self._mq:inGame() then
         return self:_set('IDLE', nil, nil, nil, 'not in game')
     end

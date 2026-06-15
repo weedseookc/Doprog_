@@ -20,7 +20,9 @@ function M.new()
         spawnId = 0,            -- value returned by Spawn(<search>).ID()
         spawnNames = {},        -- id -> name (for Spawn(id).Name())
         spawnDist = {},         -- id -> distance (for Spawn(id).Distance3D())
+        spawnLocs = {},         -- id -> {y=,x=,z=} (for Spawn(id).Y/X/Z)
         nearest = {},           -- ordered list { {id=, name=}, ... } for NearestSpawn
+        emoteQueue = {},        -- lines to deliver on the next doevents()
         targetId = 0,
         nav = { active = false, pathExists = true },
         tasks = {},             -- name -> { id=number, objectives={'Done','Open',...} }
@@ -56,10 +58,14 @@ function M.new()
             id = state.spawnId
             name, dist = state.spawnNames[id] or 'a mob', state.spawnDist[id] or 0
         end
+        local loc = state.spawnLocs[id] or { y = 0, x = 0, z = 0 }
         return {
             ID = function() return id end,
             Name = function() return name end,
             Distance3D = function() return dist end,
+            Y = function() return loc.y end,
+            X = function() return loc.x end,
+            Z = function() return loc.z end,
         }
     end
     TLO.NearestSpawn = function(i, _)
@@ -95,10 +101,27 @@ function M.new()
         cmd = function(c) record(c) end,
         cmdf = function(fmt, ...) record(string.format(fmt, ...)) end,
         delay = function(_, cond) if type(cond) == 'function' then cond() end end,
-        doevents = function() end,
         bind = function() end,
         imgui = { init = function() end, destroy = function() end },
     }
+
+    -- Emote/event plumbing: register handlers and deliver queued lines on doevents.
+    local handlers = {}
+    mq.event = function(_, pattern, cb)
+        -- Reduce the MQ pattern to its core substring (strip leading/trailing #*#).
+        local core = pattern:gsub('^#%*#', ''):gsub('#%*#$', '')
+        handlers[#handlers + 1] = { core = core, cb = cb }
+    end
+    mq.doevents = function()
+        local queue = state.emoteQueue
+        state.emoteQueue = {}
+        for _, line in ipairs(queue) do
+            for _, h in ipairs(handlers) do
+                if line:find(h.core, 1, true) then h.cb(line) end
+            end
+        end
+    end
+
     return mq, state
 end
 

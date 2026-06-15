@@ -42,8 +42,11 @@
 ---@field findSpawn fun(self: doprog.IMqAdapter, query: doprog.SpawnQuery): integer? # spawn id or nil
 ---@field findSpawnFiltered fun(self: doprog.IMqAdapter, query: doprog.SpawnQuery): integer?, string?
 ---@field spawnDistance fun(self: doprog.IMqAdapter, id: integer): number
+---@field spawnLoc fun(self: doprog.IMqAdapter, id: integer): doprog.Vec3
 ---@field target fun(self: doprog.IMqAdapter, id: integer)
 ---@field targetId fun(self: doprog.IMqAdapter): integer
+---@field registerEvent fun(self: doprog.IMqAdapter, name: string, pattern: string, cb: fun(line: string, ...: any))
+---@field doEvents fun(self: doprog.IMqAdapter)
 ---@field navActive fun(self: doprog.IMqAdapter): boolean
 ---@field navPathExists fun(self: doprog.IMqAdapter, query: doprog.SpawnQuery|doprog.Vec3): boolean
 ---@field taskExists fun(self: doprog.IMqAdapter, taskName: string): boolean
@@ -96,6 +99,13 @@
 -------------------------------------------------------------------------------
 -- Task / config
 -------------------------------------------------------------------------------
+
+--- Emote watcher used for combat positioning: arms MQ text events and reports
+--- whether a given emote substring fired recently.
+---@class doprog.IMechanicsWatcher
+---@field arm fun(self: doprog.IMechanicsWatcher, emoteSubstring: string)
+---@field firedWithin fun(self: doprog.IMechanicsWatcher, emoteSubstring: string, seconds: number): boolean
+---@field poll fun(self: doprog.IMechanicsWatcher)
 
 ---@class doprog.ITaskService
 ---@field has fun(self: doprog.ITaskService, taskName: string): boolean

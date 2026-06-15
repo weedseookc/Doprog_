@@ -13,6 +13,7 @@ local TravelService = require('doprog.services.travel_service')
 local EqbcService = require('doprog.services.eqbc_service')
 local SafetyService = require('doprog.services.safety_service')
 local TaskService = require('doprog.services.task_service')
+local MechanicsWatcher = require('doprog.services.mechanics_watcher')
 local ConfigService = require('doprog.services.config_service')
 local QuestRegistry = require('doprog.core.quest_registry')
 local Engine = require('doprog.core.engine')
@@ -63,6 +64,7 @@ function Container.build(opts)
     local eqbc = EqbcService.new({ mq = mqAdapter, logger = logger, leader = opts.leader })
     local safety = SafetyService.new({ mq = mqAdapter, eqbc = eqbc, logger = logger, lowHpPct = opts.lowHpPct })
     local task = TaskService.new({ mq = mqAdapter, logger = logger })
+    local mech = MechanicsWatcher.new({ mq = mqAdapter, logger = logger })
 
     local configPath = opts.configPath or ((mq.configDir or '.') .. '/doprog.lua')
     local config = ConfigService.new({ logger = logger, path = configPath })
@@ -71,7 +73,7 @@ function Container.build(opts)
     local registry = QuestRegistry.new({ logger = logger })
     local engine = Engine.new({
         mq = mqAdapter, nav = nav, travel = travel, safety = safety,
-        eqbc = eqbc, task = task, registry = registry, logger = logger,
+        eqbc = eqbc, task = task, mech = mech, registry = registry, logger = logger,
     })
     local state = State.new(engine)
 

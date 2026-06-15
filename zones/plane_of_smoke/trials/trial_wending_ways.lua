@@ -22,6 +22,10 @@ local TASK = 'Trial of the Wending Ways'
 ---@type doprog.SpawnQuery
 local STARTER = { name = 'Waves of Saffron Sky', npc = true }
 
+-- TODO(calibrate): the three brazier /loc spots for the fire boss drag.
+---@type doprog.Vec3?
+local BRAZIER = nil
+
 ---@type doprog.Quest
 return Quest.new({
     name = TASK,
@@ -32,7 +36,11 @@ return Quest.new({
         S.pickup({ zone = 'smoke', npc = STARTER, taskName = TASK, request = 'prepared',
             desc = 'start Trial of the Wending Ways (say "prepared")' }),
         S.combat({ zone = 'smoke', target = { name = 'Blazing Triumphant Bulwark', npc = true },
-            desc = 'defeat the fire boss (damage only when solid)' }),
+            mechanics = {
+                { react = 'drag', loc = BRAZIER,
+                  desc = 'drag the fire boss to a brazier; it is only damageable when it "gains solidity"' },
+            },
+            desc = 'defeat the fire boss (drag to braziers; damage only when solid)' }),
         S.combat({ zone = 'smoke', target = { name = 'Obsidian Undefeated Shield', npc = true },
             desc = 'defeat the earth boss (splits at 50%)' }),
         S.combat({ zone = 'smoke', target = { name = 'Flowing Unconquered Guard', npc = true },

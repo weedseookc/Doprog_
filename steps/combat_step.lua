@@ -17,10 +17,18 @@
 --- `target` and an optional `loc` camp; doprog moves to the camp and advertises
 --- NEED_COMBAT with no specific spawn, letting the host pick among local mobs.
 --- doprog still never issues an attack.
+---
+--- POSITIONING: pass `mechanics` (doprog.Mechanic[]) and doprog will, while the
+--- fight is handed off, react to emotes by moving the lead — fleeing an AE/boulder
+--- (computed escape vector from the live spawn), breaking line-of-sight on a gaze,
+--- or dragging the mob to a brazier/aura spot. Damage stays the host's job; the
+--- movement is doprog's.
 
 local Step = require('doprog.steps.step')
 
 local ENGAGE_RANGE = 50 -- units; within this we hand off, beyond it we close in
+local DEFAULT_EMOTE_WINDOW = 8 -- seconds an emote stays "active"
+local DEFAULT_FLEE = 40 -- units
 
 ---@class doprog.CombatStep : doprog.Step
 ---@field private _target doprog.SpawnQuery?
@@ -30,6 +38,7 @@ local ENGAGE_RANGE = 50 -- units; within this we hand off, beyond it we close in
 ---@field private _engageRange number
 ---@field private _untilItem string?
 ---@field private _untilCount integer
+---@field private _mechanics doprog.Mechanic[]?
 local CombatStep = Step.extend({})
 CombatStep.__index = CombatStep
 
@@ -46,6 +55,7 @@ function CombatStep.new(opts)
     self._engageRange = opts.engageRange or ENGAGE_RANGE
     self._untilItem = opts.untilItem
     self._untilCount = opts.untilCount or 1
+    self._mechanics = opts.mechanics
     return setmetatable(self, CombatStep)
 end
 
@@ -63,6 +73,56 @@ function CombatStep:isComplete(ctx)
         return ctx.task:isComplete(self._taskName)
     end
     return self._target ~= nil and ctx.mq:findSpawn(self._target) == nil
+end
+
+--- Execute positioning mechanics for this frame. Damage is the host's; movement
+--- is ours. Returns true if doprog issued a reposition (so callers know the lead
+--- is moving on purpose this tick).
+---@private
+---@param ctx doprog.StepContext
+---@return boolean
+function CombatStep:_handleMechanics(ctx)
+    if not self._mechanics then return false end
+    -- Arm emote watchers once.
+    for _, m in ipairs(self._mechanics) do
+        if m.emote then ctx.mech:arm(m.emote) end
+    end
+    local acted = false
+    for _, m in ipairs(self._mechanics) do
+        local active = (not m.emote) or ctx.mech:firedWithin(m.emote, m.window or DEFAULT_EMOTE_WINDOW)
+        if active and self:_reposition(ctx, m) then
+            acted = true
+        end
+    end
+    return acted
+end
+
+--- Perform a single mechanic's movement. `flee` works immediately (escape vector
+--- from the live spawn); loc-based reactions need the loc calibrated in-game.
+---@private
+---@param ctx doprog.StepContext
+---@param m doprog.Mechanic
+---@return boolean
+function CombatStep:_reposition(ctx, m)
+    if m.react == 'flee' then
+        local id = m.spawn and ctx.mq:findSpawn(m.spawn) or ctx.mq:targetId()
+        if not id or id == 0 then return false end
+        local here, there = ctx.mq:loc(), ctx.mq:spawnLoc(id)
+        local dx, dy = here.x - there.x, here.y - there.y
+        local len = math.sqrt(dx * dx + dy * dy)
+        if len < 1 then dx, dy, len = 1, 0, 1 end
+        local dist = m.distance or DEFAULT_FLEE
+        ctx.log:Debug('mechanic flee: %s', m.desc)
+        ctx.mq:navTo({ x = here.x + dx / len * dist, y = here.y + dy / len * dist })
+        return true
+    end
+    -- moveTo / hide / aura / drag: nav the lead to the spot (mob follows for drag).
+    if m.loc then
+        ctx.log:Debug('mechanic %s: %s', m.react, m.desc)
+        ctx.mq:navTo(m.loc)
+        return true
+    end
+    return false
 end
 
 --- Drive a nameable target: select, close distance, target, hand off.
@@ -91,7 +151,11 @@ function CombatStep:_driveTarget(ctx)
         return Step.running('TRAVEL', ('closing on %s for %s'):format(name or 'target', self.desc))
     end
 
-    if ctx.nav:isActive() then ctx.nav:stop() end
+    -- In range: hand off. Positioning mechanics (flee/hide/drag) may move the
+    -- lead this frame; otherwise stop nav so the host can fight in place.
+    if not self:_handleMechanics(ctx) and ctx.nav:isActive() then
+        ctx.nav:stop()
+    end
     local result = Step.running('NEED_COMBAT', self.desc)
     result.target = { id = id, name = name }
     return result
@@ -118,6 +182,7 @@ function CombatStep:execute(ctx)
         ctx.eqbc:followLead()
         return Step.running('TRAVEL', 'moving to camp for ' .. self.desc)
     end
+    self:_handleMechanics(ctx)
     return Step.running('NEED_COMBAT', self.desc)
 end
 

@@ -106,6 +106,20 @@ Givers that live in another zone (several partisan/mission givers are in Stratos
 or Esianti) are handled per-step, so pickup/hand-in navigate to the giver's zone
 while combat happens in the objective zone.
 
+### Combat positioning mechanics
+
+Damage is the host's job, but the *movement* during a fight is doprog's. A
+CombatStep can carry `mechanics` (`doprog.Mechanic[]`) and doprog will, while the
+fight is handed off, react to boss emotes by repositioning the lead: `flee` an
+AE/boulder (computed escape vector from the live spawn — works with no
+calibration), `hide` to break line of sight on a gaze/rapture emote, or `drag`
+the mob to a brazier/`aura` spot. Loc-based reactions are no-ops until the spot is
+filled from an in-game `/loc` (see `DATA.md`); flee works out of the box. Emote
+watching runs through `services/mechanics_watcher.lua` and is polled every tick.
+Examples: Relic Raider's Iron Heart boulder (`flee`), Prince Ralaifin's "reaching
+rapture" (`hide`) and fire-aura tanking (`aura`), Wending Ways' fire boss (`drag`
+to braziers).
+
 ## Quest data
 
 All 46 TBL quests/missions are encoded by hand from their individual

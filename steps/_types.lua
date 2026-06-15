@@ -12,6 +12,7 @@
 ---@field safety doprog.SafetyService
 ---@field eqbc doprog.EqbcService
 ---@field task doprog.TaskService
+---@field mech doprog.MechanicsWatcher
 ---@field log doprog.Logger
 
 --- Common option bag accepted by Step constructors. Subclasses narrow this.
@@ -32,5 +33,6 @@
 ---@field engageRange? integer         # combat: within this range we hand off, beyond it we close in
 ---@field untilItem? string            # combat: keep farming until this many of an item are held
 ---@field untilCount? integer          # combat: count for untilItem (default 1)
+---@field mechanics? doprog.Mechanic[] # combat: positioning rules doprog executes during the fight
 
 return {}
