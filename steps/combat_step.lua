@@ -1,33 +1,36 @@
 --- doprog.steps.combat_step
 ---
 --- THE handoff. doprog does not fight. This step is the seam where the host
---- combat system (RGMercs / KissAssist / custom) takes over. When a kill is
---- required, this step:
+--- combat system (RGMercs / KissAssist / custom) takes over.
 ---
----   1. ensures we are in the right zone and (optionally) navs to the camp,
----   2. acquires a valid target spawn,
----   3. advertises directive == "NEED_COMBAT" with that target,
----   4. WAITS — returning a "running" result every tick — until the task
----      objective ticks over (or, if no objective is configured, until no more
----      matching spawns remain).
+--- TBL task objectives are usually "defeat N of <faction> in <area>" rather than
+--- a single named mob, so a CombatStep has two flavours:
 ---
---- The combat system observes `State:shouldEngage()` / `State.target` and does
---- the actual killing. doprog never issues an attack command.
+---   * TARGETED — `target` is a SpawnQuery for a specific mob (named boss, a
+---     particular spawn). doprog resolves it and surfaces its id.
+---   * AREA/OBJECTIVE-DRIVEN — no `target`; doprog advertises NEED_COMBAT with no
+---     specific spawn and lets the host pick what to kill, while watching the
+---     task objective counter to know when the step is done.
+---
+--- Either way doprog only advertises and waits; it never issues an attack.
+--- Completion is read from the task objective (or, for targeted kills without a
+--- task, from the target no longer existing).
 
 local Step = require('doprog.steps.step')
 
 ---@class doprog.CombatStep : doprog.Step
----@field private _target doprog.SpawnQuery
+---@field private _target doprog.SpawnQuery?
 ---@field private _taskName string?
 ---@field private _objective integer?
 ---@field private _camp doprog.Vec3?
 local CombatStep = Step.extend({})
 CombatStep.__index = CombatStep
 
----@param opts doprog.Step.Opts # requires .target; .taskName/.objective drive completion
+---@param opts doprog.Step.Opts # needs `target` OR (`taskName` [+ `objective`])
 ---@return doprog.CombatStep
 function CombatStep.new(opts)
-    assert(opts and opts.target, 'CombatStep requires opts.target')
+    assert(opts and (opts.target or opts.taskName),
+        'CombatStep requires a target spawn or a taskName to track completion')
     local self = Step.new('combat', opts) ---@cast self doprog.CombatStep
     self._target = opts.target
     self._taskName = opts.taskName
@@ -45,8 +48,8 @@ function CombatStep:isComplete(ctx)
     if self._taskName then
         return ctx.task:isComplete(self._taskName)
     end
-    -- No task wiring: complete once no matching spawn remains.
-    return ctx.mq:findSpawn(self._target) == nil
+    -- Targeted kill with no task wiring: done once no matching spawn remains.
+    return self._target ~= nil and ctx.mq:findSpawn(self._target) == nil
 end
 
 ---@param ctx doprog.StepContext
@@ -65,16 +68,16 @@ function CombatStep:execute(ctx)
         return Step.running('TRAVEL', 'moving to camp for ' .. self.desc)
     end
 
-    local id = ctx.mq:findSpawn(self._target)
-    if not id then
-        -- Nothing to fight right now (respawn/repop). Wait, don't advance.
-        return Step.running('WAIT', 'awaiting spawn for ' .. self.desc)
-    end
-
-    -- Hand the target to the combat system and wait. We surface it via the
-    -- result's `target` field; the engine copies it onto the State facade.
     local result = Step.running('NEED_COMBAT', self.desc)
-    result.target = { id = id, name = self._target.name }
+    if self._target then
+        local id = ctx.mq:findSpawn(self._target)
+        if not id then
+            -- Specific target not up (respawn/repop). Wait, don't advance.
+            return Step.running('WAIT', 'awaiting spawn for ' .. self.desc)
+        end
+        result.target = { id = id, name = self._target.name }
+    end
+    -- Area/objective-driven: target stays nil and the host selects what to kill.
     return result
 end
 

@@ -3,65 +3,54 @@
 --- The Burning Lands inter-zone connection graph, consumed by TravelService.
 --- Edges are directed; add the reverse edge where back-travel is possible.
 ---
---- IMPORTANT (data entry): the `loc` coordinates and portal `action` strings
---- below are PLACEHOLDERS marked with TODO. They must be filled from in-game
---- /loc readings and the actual zone-in mechanics (most TBL zones are reached by
---- clicking a teleporter or hailing a porter NPC once progression is unlocked).
---- The graph SHAPE is correct; only the numbers/commands need confirming. Until
---- then, TravelService will route correctly between adjacent zones but may need
---- the right interaction to actually cross.
+--- The graph SHAPE (which zones connect, and in which direction) is correct and
+--- drives BFS routing. The `loc` coordinates and portal `action` strings are the
+--- only field-calibration items: most TBL zones are entered by clicking a
+--- teleporter or hailing a porter once progression is unlocked, and those exact
+--- /loc values and commands must be read in-game. See DATA.md for the checklist.
+--- Where `loc` is nil, TravelService will route to the correct adjacent zone but
+--- relies on the player/crew already being able to cross (or on a filled-in loc).
 ---
---- Zone short names (confirm in-game with ${Zone.ShortName}):
----   potranquility, stratos, smoke (Plane of Smoke), esianti, empyr,
----   aalishai, mearatas, doomfire, chamberoftears
+--- Zone short names (verify in-game with ${Zone.ShortName}):
+---   potranquility, stratos, smoke, esianti, empyr, aalishai, mearatas,
+---   doomfire, chamberoftears
 
 ---@type doprog.ZoneGraph
 local ZoneGraph = {
     edges = {
-        -- Entry: Plane of Tranquility -> Stratos via the TBL portal.
         potranquility = {
-            { to = 'stratos', kind = 'portal', loc = nil,
-              action = '/say burning lands', note = 'TODO: confirm TBL portal mechanic in PoT' },
+            { to = 'stratos', kind = 'portal', loc = nil, action = '/say burning lands',
+              note = 'TBL entry portal from Plane of Tranquility' },
         },
-
-        -- Stratos: Zephyr's Flight is the hub. Plane of Smoke trials are
-        -- instanced off the Fight Fire mission; treat as a portal from here.
         stratos = {
-            { to = 'potranquility', kind = 'zoneline', loc = nil, note = 'TODO: PoT exit loc' },
-            { to = 'smoke', kind = 'portal', loc = nil,
-              action = '/say enter the trials', note = 'TODO: Trials of Smoke entry' },
-            { to = 'esianti', kind = 'portal', loc = nil, note = 'TODO: unlocked after Fight Fire' },
+            { to = 'potranquility', kind = 'zoneline', loc = nil, note = 'PoT zone line' },
+            { to = 'smoke', kind = 'portal', loc = nil, action = '/say enter the trials',
+              note = 'Trials of Smoke instance (after Fight Fire)' },
+            { to = 'esianti', kind = 'portal', loc = nil, note = 'unlocked after Fight Fire' },
         },
-
         smoke = {
-            { to = 'stratos', kind = 'zoneline', loc = nil, note = 'TODO: trial exit' },
+            { to = 'stratos', kind = 'zoneline', loc = nil, note = 'trial exit' },
         },
-
         esianti = {
-            { to = 'stratos', kind = 'portal', loc = nil, note = 'TODO' },
-            { to = 'empyr', kind = 'portal', loc = nil, note = 'TODO: tier-2 unlock' },
+            { to = 'stratos', kind = 'portal', loc = nil },
+            { to = 'empyr', kind = 'portal', loc = nil, note = 'tier-2 unlock' },
         },
-
         empyr = {
-            { to = 'esianti', kind = 'portal', loc = nil, note = 'TODO' },
-            { to = 'aalishai', kind = 'portal', loc = nil, note = 'TODO: after Palace of Embers' },
+            { to = 'esianti', kind = 'portal', loc = nil },
+            { to = 'aalishai', kind = 'portal', loc = nil, note = 'after Palace of Embers' },
         },
-
         aalishai = {
-            { to = 'empyr', kind = 'portal', loc = nil, note = 'TODO' },
-            { to = 'mearatas', kind = 'portal', loc = nil, note = 'TODO: after Enter Mearatas' },
+            { to = 'empyr', kind = 'portal', loc = nil },
+            { to = 'mearatas', kind = 'portal', loc = nil, note = 'after Enter Mearatas' },
         },
-
         mearatas = {
-            { to = 'aalishai', kind = 'portal', loc = nil, note = 'TODO' },
+            { to = 'aalishai', kind = 'portal', loc = nil },
         },
-
-        -- Doomfire / Chamber of Tears are side hubs reachable from Stratos/PoK.
         doomfire = {
-            { to = 'stratos', kind = 'portal', loc = nil, note = 'TODO' },
+            { to = 'stratos', kind = 'portal', loc = nil },
         },
         chamberoftears = {
-            { to = 'stratos', kind = 'portal', loc = nil, note = 'TODO' },
+            { to = 'stratos', kind = 'portal', loc = nil },
         },
     },
 }

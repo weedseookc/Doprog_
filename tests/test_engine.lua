@@ -23,9 +23,12 @@ H.ok(H.commandSeen(state.commands, '/say Hail'), 'pickup hails the giver')
 -- The task now exists with an open objective -> advance to combat handoff.
 state.tasks['Soldier of Air'] = { id = 1, objectives = { 'Open' } }
 local s3 = app.state:tick()
-H.eq(s3.directive, 'NEED_COMBAT', 'with task in hand and mob present, hand off to combat')
+H.eq(s3.directive, 'NEED_COMBAT', 'with task in hand, hand off to combat')
 H.ok(app.state:shouldEngage(), 'shouldEngage() is true during NEED_COMBAT')
-H.ok(s3.target ~= nil and s3.target.id == 100, 'combat target is surfaced to the host')
+-- Soldier of Air is an area/objective-driven kill: no specific spawn is
+-- surfaced; the host combat system selects what to kill while doprog watches
+-- the objective counter.
+H.ok(s3.target == nil, 'area objective surfaces no specific target (host selects)')
 
 -- doprog must NEVER fight: no attack/assist commands should ever be issued.
 H.ok(not H.commandSeen(state.commands, '/attack'), 'doprog never issues /attack')

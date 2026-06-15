@@ -4,11 +4,9 @@
 --- doprog.Mission instances; index.lua aggregates them in progression order.
 ---
 --- Giver NPCs (confirmed via tbl.eqresource.com Quests-by-NPC):
----   Grieving Soul Scent    -> Soldier of Air, Fight Fire (mission)
----   Ashen Wandering Horizon-> Do Unto Them
----   Iron Lightning Spirit  -> Earning One's Place, A Petitioner's Plight
----   Dusky Iron Meditation  -> Key to the Kingdom
----   Rianar Gadliun         -> Political Awareness
---- TODO(data): NPC /loc coordinates and exact kill targets/objective indices
---- still need in-game confirmation; spawn-name nav is used until then.
+---   Grieving Soul Scent     -> Soldier of Air, Fight Fire (mission)
+---   Ashen Wandering Horizon -> Do Unto Them
+---   Iron Lightning Spirit   -> Earning One's Place, A Petitioner's Plight
+---   Dusky Iron Meditation   -> Key to the Kingdom
+---   Rianar Gadliun          -> Political Awareness
 return {}

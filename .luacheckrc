@@ -21,6 +21,11 @@ files["**/_types.lua"] = {
     ignore = { "212", "211", "542" },
 }
 
+-- Generated quest files and the generator favour compact, single-line declarative
+-- step definitions; line-length is intentionally relaxed there.
+files["zones/**/*.lua"] = { max_line_length = false }
+files["tools/*.lua"] = { max_line_length = false }
+
 ignore = {
     "212/self", -- method self may be unused in abstract base methods
 }

@@ -1,21 +1,22 @@
 --- doprog.zones.mearatas.partisan_earthen_dirge
---- Earthen Dirge — partisan quest.
----
---- TODO(data): confirm giver NPC, kill target(s), hand-in NPC, objective indices
---- and /loc coordinates from https://tbl.eqresource.com . The step shape below
---- (pickup -> combat -> handin) is the common pattern; adjust to the real task.
+--- Earthen Dirge — partisan. Giver: Obsidian Sundering Master in esianti.
+--- Combat is objective-driven: doprog advertises NEED_COMBAT and watches
+--- the task objective; the host combat system selects and kills targets.
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
 
+---@type doprog.SpawnQuery
+local GIVER = { name = "Obsidian Sundering Master", npc = true }
+
 ---@type doprog.Quest
 return Quest.new({
-    name = 'Earthen Dirge',
-    type = 'partisan',
-    zone = 'mearatas',
-    completionTask = 'Earthen Dirge',
+    name = "Earthen Dirge",
+    type = "partisan",
+    zone = "mearatas",
+    completionTask = "Earthen Dirge",
     steps = {
-        S.pickup({ zone = 'mearatas', npc = { name = 'TODO giver', npc = true }, taskName = 'Earthen Dirge', desc = 'accept Earthen Dirge' }),
-        S.combat({ zone = 'mearatas', target = { name = 'TODO target', npc = true }, taskName = 'Earthen Dirge', objective = 1, desc = 'Earthen Dirge objective' }),
-        S.handin({ zone = 'mearatas', npc = { name = 'TODO giver', npc = true }, taskName = 'Earthen Dirge', desc = 'complete Earthen Dirge' }),
+        S.pickup({ zone = "esianti", npc = GIVER, taskName = "Earthen Dirge", desc = "accept Earthen Dirge" }),
+        S.combat({ zone = "mearatas", taskName = "Earthen Dirge", objective = 1, desc = "Earthen Dirge — clear combat objective" }),
+        S.handin({ zone = "esianti", npc = GIVER, taskName = "Earthen Dirge", desc = "complete Earthen Dirge" }),
     },
 })
