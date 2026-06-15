@@ -30,5 +30,7 @@
 ---@field request? string              # offer/keyword phrase said to acquire a task (pickup)
 ---@field completeAfter? integer       # ms after firing to consider a click done (porter says)
 ---@field engageRange? integer         # combat: within this range we hand off, beyond it we close in
+---@field untilItem? string            # combat: keep farming until this many of an item are held
+---@field untilCount? integer          # combat: count for untilItem (default 1)
 
 return {}

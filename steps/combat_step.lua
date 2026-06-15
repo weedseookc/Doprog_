@@ -28,26 +28,34 @@ local ENGAGE_RANGE = 50 -- units; within this we hand off, beyond it we close in
 ---@field private _objective integer?
 ---@field private _camp doprog.Vec3?
 ---@field private _engageRange number
+---@field private _untilItem string?
+---@field private _untilCount integer
 local CombatStep = Step.extend({})
 CombatStep.__index = CombatStep
 
----@param opts doprog.Step.Opts # needs `target` OR (`taskName` [+ `objective`])
+---@param opts doprog.Step.Opts # needs `target` OR (`taskName` [+ `objective`]) OR `untilItem`
 ---@return doprog.CombatStep
 function CombatStep.new(opts)
-    assert(opts and (opts.target or opts.taskName),
-        'CombatStep requires a target spawn or a taskName to track completion')
+    assert(opts and (opts.target or opts.taskName or opts.untilItem),
+        'CombatStep requires a target spawn, a taskName, or untilItem to track completion')
     local self = Step.new('combat', opts) ---@cast self doprog.CombatStep
     self._target = opts.target
     self._taskName = opts.taskName
     self._objective = opts.objective
     self._camp = opts.loc
     self._engageRange = opts.engageRange or ENGAGE_RANGE
+    self._untilItem = opts.untilItem
+    self._untilCount = opts.untilCount or 1
     return setmetatable(self, CombatStep)
 end
 
 ---@param ctx doprog.StepContext
 ---@return boolean
 function CombatStep:isComplete(ctx)
+    -- Farming completion: kill until we hold enough of an item (gathering tasks).
+    if self._untilItem then
+        return ctx.mq:itemCount(self._untilItem) >= self._untilCount
+    end
     if self._taskName and self._objective then
         return ctx.task:objectiveDone(self._taskName, self._objective)
     end
