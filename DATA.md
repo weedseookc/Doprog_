@@ -46,9 +46,12 @@ flee mechanics (Iron Heart boulder, etc.) already work without any loc.
 
 ## 5. In-game tuning that can't be pre-baked
 
-- **Trial of Three / Wending Ways** boss order is determined by clue lines /
-  portal counts at run time (randomized). doprog targets the bosses; a clue/
-  portal parser to enforce the exact order is a planned enhancement.
+- **Trial of Three / Wending Ways** kill order IS solved at run time
+  (`clue_solver.lua` decodes the clue emotes via Spawn.Height/position;
+  `portal_solver.lua` counts portals per element). The only calibration is if the
+  in-game clue phrasing or portal spawn names differ from the decode tables —
+  adjust `DECODE` / `portalSearch` there. Speaker's Amphitheater targets whichever
+  named is up (random pairs).
 - **Window automations** (task-accept, give/trade, ground-spawn `/itemtarget`,
   chest open) use standard UI/notify commands; confirm the window/button names
   match your client/server build. All such commands are localized to the step
