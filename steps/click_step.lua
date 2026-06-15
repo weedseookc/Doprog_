@@ -1,9 +1,12 @@
 --- doprog.steps.click_step
 ---
---- Interact with the world: click a clicky object, zone-in portal, or run any
---- raw slash command at a location (e.g. `/click left item`, `/say enter`).
---- Optionally navigates to a point/NPC first. Completion is either a configured
---- predicate or, by default, a zone change (the common "click to zone in" case).
+--- Interact with the world: click a clicky object, zone-in portal, say a phrase
+--- to a porter NPC, or run any raw slash command at a location (e.g.
+--- `/click left item`, `/say karana`). Optionally navigates to a point/NPC first.
+--- Completion is, in priority order: a configured predicate; else if
+--- `completeAfter` is set, that many ms after firing (porter teleports within the
+--- same zone, where no zone change is observable); else a zone change (the common
+--- "click to zone in" case).
 
 local Step = require('doprog.steps.step')
 
@@ -12,12 +15,13 @@ local Step = require('doprog.steps.step')
 ---@field private _npc doprog.SpawnQuery?
 ---@field private _loc doprog.Vec3?
 ---@field private _condition (fun(ctx: doprog.StepContext): boolean)?
+---@field private _completeAfter number?
 ---@field private _zoneBefore string?
 ---@field private _clickedAt number
 local ClickStep = Step.extend({})
 ClickStep.__index = ClickStep
 
----@param opts doprog.Step.Opts # requires .action; optional .loc/.npc/.condition
+---@param opts doprog.Step.Opts # requires .action; optional .loc/.npc/.condition/.completeAfter
 ---@return doprog.ClickStep
 function ClickStep.new(opts)
     assert(opts and opts.action, 'ClickStep requires opts.action')
@@ -26,6 +30,7 @@ function ClickStep.new(opts)
     self._npc = opts.npc
     self._loc = opts.loc
     self._condition = opts.condition
+    self._completeAfter = opts.completeAfter and (opts.completeAfter / 1000) or nil
     self._zoneBefore = nil
     self._clickedAt = -math.huge -- so the first click fires immediately
     return setmetatable(self, ClickStep)
@@ -35,9 +40,13 @@ end
 ---@return boolean
 function ClickStep:isComplete(ctx)
     if self._condition then return self._condition(ctx) end
+    if self._clickedAt == -math.huge then return false end -- not clicked yet
+    if self._completeAfter then
+        return (os.clock() - self._clickedAt) >= self._completeAfter
+    end
     if self._zoneBefore == nil then return false end
     -- Default completion: the zone changed after we clicked.
-    return ctx.mq:zoneShortName() ~= self._zoneBefore and self._clickedAt > 0
+    return ctx.mq:zoneShortName() ~= self._zoneBefore
 end
 
 ---@param ctx doprog.StepContext

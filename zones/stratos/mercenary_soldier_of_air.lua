@@ -1,22 +1,35 @@
 --- doprog.zones.stratos.mercenary_soldier_of_air
---- Soldier of Air — mercenary. Giver: Grieving Soul Scent.
---- Combat is objective-driven: doprog advertises NEED_COMBAT and watches
---- the task objective; the host combat system selects and kills targets.
+---
+--- Soldier of Air (solo mercenary task). Source: tbl.eqresource.com/soldierofair
+--- Giver/turn-in: Grieving Soul Scent (Stratos: Zephyr's Flight).
+--- Request phrase: "deal with". Lockout 30m, repeatable.
+---
+--- Objectives:
+---   1. Drive back the invaders from Empyr. 0/5
+---      -> Defeat 5 *Brass Phoenix Brigade* mobs deep in the zone. Per player
+---         comments, mephits and air elementals do NOT count. Objective-driven:
+---         doprog advertises NEED_COMBAT and watches the 0/5 counter; the host
+---         must engage Brass Phoenix Brigade specifically.
+---   2. Speak with Grieving Soul Scent. 0/1  -> hail to finish.
+
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
 
 ---@type doprog.SpawnQuery
-local GIVER = { name = "Grieving Soul Scent", npc = true }
+local GIVER = { name = 'Grieving Soul Scent', npc = true }
 
 ---@type doprog.Quest
 return Quest.new({
-    name = "Soldier of Air",
-    type = "mercenary",
-    zone = "stratos",
-    completionTask = "Soldier of Air",
+    name = 'Soldier of Air',
+    type = 'mercenary',
+    zone = 'stratos',
+    completionTask = 'Soldier of Air',
     steps = {
-        S.pickup({ zone = "stratos", npc = GIVER, taskName = "Soldier of Air", desc = "accept Soldier of Air" }),
-        S.combat({ zone = "stratos", taskName = "Soldier of Air", objective = 1, desc = "Soldier of Air — clear combat objective" }),
-        S.handin({ zone = "stratos", npc = GIVER, taskName = "Soldier of Air", desc = "complete Soldier of Air" }),
+        S.pickup({ zone = 'stratos', npc = GIVER, taskName = 'Soldier of Air', request = 'deal with',
+            desc = 'accept Soldier of Air (say "deal with")' }),
+        S.combat({ zone = 'stratos', taskName = 'Soldier of Air', objective = 1,
+            desc = 'defeat 5 Brass Phoenix Brigade (NOT mephits/air elementals)' }),
+        S.handin({ zone = 'stratos', npc = GIVER, taskName = 'Soldier of Air',
+            desc = 'speak with Grieving Soul Scent to finish' }),
     },
 })

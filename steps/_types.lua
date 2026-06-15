@@ -27,5 +27,7 @@
 ---@field count? integer               # required count (loot steps)
 ---@field condition? fun(ctx: doprog.StepContext): boolean  # wait-step predicate
 ---@field action? string               # raw slash command (click steps)
+---@field request? string              # offer/keyword phrase said to acquire a task (pickup)
+---@field completeAfter? integer       # ms after firing to consider a click done (porter says)
 
 return {}

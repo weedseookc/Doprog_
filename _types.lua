@@ -16,7 +16,7 @@
 ---@class doprog.Vec3
 ---@field y number
 ---@field x number
----@field z number
+---@field z? number # optional; if omitted, nav uses 2D `/nav loc Y X` and the mesh supplies Z
 ---@field heading? number # optional facing, 0-512 EQ heading units
 
 --- A declarative description of a spawn to find/target. Resolved by MqAdapter

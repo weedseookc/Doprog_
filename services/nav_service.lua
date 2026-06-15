@@ -46,7 +46,10 @@ end
 ---@param b doprog.Vec3
 ---@return number
 local function dist3(a, b)
-    local dx, dy, dz = a.x - b.x, a.y - b.y, a.z - b.z
+    local dx, dy = a.x - b.x, a.y - b.y
+    -- Z is optional (2D destinations from a player /loc); only include it when
+    -- both points have it.
+    local dz = (a.z and b.z) and (a.z - b.z) or 0
     return math.sqrt(dx * dx + dy * dy + dz * dz)
 end
 

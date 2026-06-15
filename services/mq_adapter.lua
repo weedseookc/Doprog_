@@ -52,9 +52,14 @@ end
 ---@return string
 function MqAdapter:_navArg(dest)
     if dest.id then return ('id %d'):format(dest.id) end
-    if dest.x and dest.y and dest.z then
-        -- locxyz takes X Y Z order (distinct from EQ /loc which is Y X).
-        return ('locxyz %.2f %.2f %.2f'):format(dest.x, dest.y, dest.z)
+    if dest.x and dest.y then
+        if dest.z then
+            -- locxyz takes X Y Z order (distinct from EQ /loc which is Y X).
+            return ('locxyz %.2f %.2f %.2f'):format(dest.x, dest.y, dest.z)
+        end
+        -- No Z (e.g. from a player /loc): 2D nav; the mesh resolves Z. /nav loc
+        -- takes EQ Y X order.
+        return ('loc %.2f %.2f'):format(dest.y, dest.x)
     end
     if dest.name then
         local id = self:findSpawn(dest)
