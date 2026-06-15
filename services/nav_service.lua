@@ -63,9 +63,9 @@ function NavService:isActive()
 end
 
 function NavService:stop()
-    if self:isActive() then
-        self._mq:cmd('/nav stop')
-    end
+    -- Issued unconditionally: /nav stop is harmless when not navigating and we
+    -- want a guaranteed halt when a safety gate trips mid-path.
+    self._mq:cmd('/nav stop')
 end
 
 --- Detect lack of forward progress and try to recover. Returns true if a

@@ -24,7 +24,7 @@ function HandinStep.new(opts)
     self._items = opts.items or {}
     self._taskName = opts.taskName
     self._objective = opts.objective
-    self._handedAt = 0
+    self._handedAt = -math.huge -- so the first hand-in attempt fires immediately
     return setmetatable(self, HandinStep)
 end
 

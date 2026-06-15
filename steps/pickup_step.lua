@@ -23,7 +23,7 @@ function PickupStep.new(opts)
     local self = Step.new('pickup', opts) ---@cast self doprog.PickupStep
     self._npc = opts.npc
     self._taskName = opts.taskName
-    self._hailedAt = 0
+    self._hailedAt = -math.huge -- so the first attempt fires immediately
     return setmetatable(self, PickupStep)
 end
 

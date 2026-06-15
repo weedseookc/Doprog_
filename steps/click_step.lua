@@ -27,7 +27,7 @@ function ClickStep.new(opts)
     self._loc = opts.loc
     self._condition = opts.condition
     self._zoneBefore = nil
-    self._clickedAt = 0
+    self._clickedAt = -math.huge -- so the first click fires immediately
     return setmetatable(self, ClickStep)
 end
 
