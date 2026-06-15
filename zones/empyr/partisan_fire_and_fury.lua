@@ -17,10 +17,6 @@ local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
 
 local TASK = 'Fire and Fury'
----@param n integer
-local function objDone(n)
-    return function(ctx) return ctx.task:objectiveDone(TASK, n) end
-end
 
 ---@type doprog.SpawnQuery
 local SAGE = { name = 'Horizon Blighted Sage', npc = true }

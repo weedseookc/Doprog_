@@ -7,6 +7,7 @@ return Zone.new({
     shortName = 'doomfire',
     displayName = 'Doomfire, the Burning Lands',
     quests = {
+        require('doprog.zones.doomfire.mission_tyrant_of_fire'),
         require('doprog.zones.doomfire.task_delivery'),
         require('doprog.zones.doomfire.task_remodeling'),
         require('doprog.zones.doomfire.task_strange_magic'),
