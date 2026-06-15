@@ -19,6 +19,27 @@ local TASK = "Trial of the Speaker's Amphitheater"
 ---@type doprog.SpawnQuery
 local STARTER = { name = 'Waves of Saffron Sky', npc = true }
 
+-- The four named spawn in RANDOM pairs, so there is no fixed order: doprog
+-- targets whichever named is currently up.
+local NAMED = {
+    'Alabaster Moonbreeze',  -- blue sigil, SE
+    'Sunbird of the Dawn',   -- red sigil, NW
+    'Grinning Monsoon',      -- purple sigil, SW
+    'Diamond Earthshaker',   -- orange sigil, NE
+}
+
+--- Pick any living named; once all four are down, the final boss; then nil.
+---@param ctx doprog.StepContext
+---@return doprog.SpawnQuery|false|nil
+local function nextNamed(ctx)
+    for _, n in ipairs(NAMED) do
+        if ctx.mq:findSpawn({ name = n, npc = true }) ~= nil then
+            return { name = n, npc = true }
+        end
+    end
+    return nil
+end
+
 ---@type doprog.Quest
 return Quest.new({
     name = TASK,
@@ -28,14 +49,10 @@ return Quest.new({
     steps = {
         S.pickup({ zone = 'smoke', npc = STARTER, taskName = TASK, request = 'prepared',
             desc = "start Trial of the Speaker's Amphitheater (say \"prepared\")" }),
-        S.combat({ zone = 'smoke', target = { name = 'Alabaster Moonbreeze', npc = true },
-            desc = 'defeat Alabaster Moonbreeze (blue sigil, SE)' }),
-        S.combat({ zone = 'smoke', target = { name = 'Sunbird of the Dawn', npc = true },
-            desc = 'defeat Sunbird of the Dawn (red sigil, NW)' }),
-        S.combat({ zone = 'smoke', target = { name = 'Grinning Monsoon', npc = true },
-            desc = 'defeat Grinning Monsoon (purple sigil, SW)' }),
-        S.combat({ zone = 'smoke', target = { name = 'Diamond Earthshaker', npc = true },
-            desc = 'defeat Diamond Earthshaker (orange sigil, NE)' }),
+        -- Clear the four sigil-platform named in whatever order they come up.
+        S.combat({ zone = 'smoke', target = nextNamed,
+            desc = 'defeat the 4 sigil named (random pairs): Moonbreeze/Sunbird/Monsoon/Earthshaker' }),
+        -- Then the final boss (heals to full if anyone is left below).
         S.combat({ zone = 'smoke', taskName = TASK,
             target = { name = 'overlord of ash', npc = true },
             desc = 'use the sigil of the overlord of ash and defeat the final boss' }),

@@ -42,6 +42,8 @@
 ---@field findSpawn fun(self: doprog.IMqAdapter, query: doprog.SpawnQuery): integer? # spawn id or nil
 ---@field findSpawnFiltered fun(self: doprog.IMqAdapter, query: doprog.SpawnQuery): integer?, string?
 ---@field spawnDistance fun(self: doprog.IMqAdapter, id: integer): number
+---@field spawnHeight fun(self: doprog.IMqAdapter, id: integer): number
+---@field spawnCount fun(self: doprog.IMqAdapter, search: string): integer
 ---@field spawnLoc fun(self: doprog.IMqAdapter, id: integer): doprog.Vec3
 ---@field target fun(self: doprog.IMqAdapter, id: integer)
 ---@field targetId fun(self: doprog.IMqAdapter): integer

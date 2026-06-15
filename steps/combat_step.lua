@@ -31,7 +31,7 @@ local DEFAULT_EMOTE_WINDOW = 8 -- seconds an emote stays "active"
 local DEFAULT_FLEE = 40 -- units
 
 ---@class doprog.CombatStep : doprog.Step
----@field private _target doprog.SpawnQuery?
+---@field private _target doprog.SpawnQuery|(fun(ctx: doprog.StepContext): doprog.SpawnQuery?)|nil
 ---@field private _taskName string?
 ---@field private _objective integer?
 ---@field private _camp doprog.Vec3?
@@ -72,7 +72,26 @@ function CombatStep:isComplete(ctx)
     if self._taskName then
         return ctx.task:isComplete(self._taskName)
     end
-    return self._target ~= nil and ctx.mq:findSpawn(self._target) == nil
+    -- Targeted (static or dynamic resolver): done when nothing is left to kill.
+    -- A dynamic resolver may return `false` to mean "not solved yet, keep
+    -- waiting" (distinct from nil = nothing left, which is complete).
+    if self._target then
+        local q = self:_resolveTarget(ctx)
+        if q == false then return false end
+        return q == nil or ctx.mq:findSpawn(q) == nil
+    end
+    return false
+end
+
+--- Resolve the target query for this frame (supports a dynamic resolver function
+--- so a step can pick "the next boss in solved kill order").
+---@private
+---@param ctx doprog.StepContext
+---@return doprog.SpawnQuery?
+function CombatStep:_resolveTarget(ctx)
+    local t = self._target
+    if type(t) == 'function' then return t(ctx) end
+    return t
 end
 
 --- Execute positioning mechanics for this frame. Damage is the host's; movement
@@ -130,7 +149,15 @@ end
 ---@param ctx doprog.StepContext
 ---@return doprog.StepResult
 function CombatStep:_driveTarget(ctx)
-    local id, name = ctx.mq:findSpawnFiltered(self._target)
+    local query = self:_resolveTarget(ctx)
+    if query == false then
+        -- Resolver is still working it out (e.g. clue order not solved yet).
+        return Step.running('WAIT', 'solving the next target for ' .. self.desc)
+    end
+    if not query then
+        return Step.done('TRAVEL')
+    end
+    local id, name = ctx.mq:findSpawnFiltered(query)
     if not id then
         -- No valid target in range. Move to the camp to look, else wait.
         if self._camp and not ctx.nav:to(self._camp) then

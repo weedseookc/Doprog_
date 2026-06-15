@@ -17,11 +17,14 @@ function M.new()
             pctHps = 100, hovering = false, xtarget = 0,
             x = 0, y = 0, z = 0, heading = 0,
         },
-        spawnId = 0,            -- value returned by Spawn(<search>).ID()
+        spawnId = 0,            -- value returned by Spawn(<search>).ID() when no name matches
+        spawnByName = {},       -- name substring -> id (Spawn(<search>).ID() name resolution)
         spawnNames = {},        -- id -> name (for Spawn(id).Name())
         spawnDist = {},         -- id -> distance (for Spawn(id).Distance3D())
+        spawnHeights = {},      -- id -> height (for Spawn(id).Height())
         spawnLocs = {},         -- id -> {y=,x=,z=} (for Spawn(id).Y/X/Z)
         nearest = {},           -- ordered list { {id=, name=}, ... } for NearestSpawn
+        spawnCounts = {},       -- search string -> count (for SpawnCount)
         emoteQueue = {},        -- lines to deliver on the next doevents()
         targetId = 0,
         nav = { active = false, pathExists = true },
@@ -51,22 +54,30 @@ function M.new()
         Heading = { Degrees = function() return state.me.heading end },
     }
     TLO.Spawn = function(arg)
-        local id, name, dist
+        local id
         if type(arg) == 'number' then
-            id, name, dist = arg, state.spawnNames[arg] or 'a mob', state.spawnDist[arg] or 0
+            id = arg
         else
+            -- Resolve a search string to an id by matching a known name substring.
             id = state.spawnId
-            name, dist = state.spawnNames[id] or 'a mob', state.spawnDist[id] or 0
+            for nm, sid in pairs(state.spawnByName) do
+                if tostring(arg):find(nm, 1, true) then id = sid break end
+            end
         end
+        local name, dist = state.spawnNames[id] or 'a mob', state.spawnDist[id] or 0
         local loc = state.spawnLocs[id] or { y = 0, x = 0, z = 0 }
         return {
             ID = function() return id end,
             Name = function() return name end,
             Distance3D = function() return dist end,
+            Height = function() return state.spawnHeights[id] or 0 end,
             Y = function() return loc.y end,
             X = function() return loc.x end,
             Z = function() return loc.z end,
         }
+    end
+    TLO.SpawnCount = function(search)
+        return function() return state.spawnCounts[search] or 0 end
     end
     TLO.NearestSpawn = function(i, _)
         local e = state.nearest[i]

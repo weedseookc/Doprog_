@@ -5,27 +5,35 @@
 --- Saffron Sky. One of the five trials; completing any one progresses you.
 --- 6h limit, 60h lockout.
 ---
---- Single objective: "Defeat any trial you have not already defeated. 0/1"
---- The trial is a PUZZLE: three elemental bosses must be defeated in an order
---- derived from four clue lines shown at the start (size / weapon / position /
---- element). The clue mapping is randomized per run, so the *order* cannot be
---- baked in here — doprog targets each boss and closes distance; the correct
---- defeat order is read from the clues at run time (a clue parser is a planned
---- enhancement). After all three, open the chest.
+--- THE PUZZLE: three elemental bosses must be defeated in a specific order. At the
+--- start the trial emotes a clue for the FIRST mob and a clue for the THIRD; the
+--- SECOND is found by elimination (per eqresource + comments). doprog now SOLVES
+--- this at run time: `clue_solver` captures the clue emotes, decodes each
+--- (size/position/element), resolves it to a named boss, and feeds the kill order
+--- to a single dynamic-target CombatStep. While the clues are not yet solved the
+--- step WAITs rather than killing in the wrong order (a wrong kill resets it).
+--- See clue_solver.lua for the decode/resolve details and its limits.
 ---
 --- Bosses (all max melee ~35-40k, AE-warned by an emote):
 ---   Dark Waters Sing   (water): Water Blast (DD+knockback), Boiling Mana (mana AE)
 ---   Warm Heart Flickers(fire) : Flaming Defense (DS), Burning Embers (AE + DoT)
 ---   Shadows of Stone   (earth): Crushing Earth (AE + 3s stun), Choking Dust (silence)
---- Note: all members must be in the room on engage or take a blind DoT; mobs leash
---- at room edges.
+--- All members must be in the room on engage or take a blind DoT; mobs leash at
+--- the room edges.
 
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
+local ClueSolver = require('doprog.zones.plane_of_smoke.trials.clue_solver')
 
 local TASK = 'Trial of Three'
 ---@type doprog.SpawnQuery
 local STARTER = { name = 'Waves of Saffron Sky', npc = true }
+
+local solver = ClueSolver.new({
+    { name = 'Dark Waters Sing', element = 'water' },
+    { name = 'Warm Heart Flickers', element = 'fire' },
+    { name = 'Shadows of Stone', element = 'earth' },
+})
 
 ---@type doprog.Quest
 return Quest.new({
@@ -36,15 +44,14 @@ return Quest.new({
     steps = {
         S.pickup({ zone = 'smoke', npc = STARTER, taskName = TASK, request = 'prepared',
             desc = 'start Trial of Three (say "prepared" inside the Trials instance)' }),
-        -- Defeat the three bosses. Order is clue-driven; doprog targets each.
-        S.combat({ target = { name = 'Dark Waters Sing', npc = true },
-            desc = 'defeat Dark Waters Sing (water) in clue order' }),
-        S.combat({ target = { name = 'Warm Heart Flickers', npc = true },
-            desc = 'defeat Warm Heart Flickers (fire) in clue order' }),
-        S.combat({ target = { name = 'Shadows of Stone', npc = true },
-            desc = 'defeat Shadows of Stone (earth) in clue order' }),
-        -- Claim the reward chest to register the trial.
-        S.click({ taskName = TASK, action = '/multiline ; /itemtarget chest ; /click left item',
+        -- One combat step whose target is resolved from the solved clue order:
+        -- doprog targets the correct boss next, in sequence, until all three die.
+        S.combat({
+            zone = 'smoke',
+            target = function(ctx) return solver:nextTarget(ctx) end,
+            desc = 'defeat the three bosses in the clue-solved order',
+        }),
+        S.click({ action = '/multiline ; /itemtarget chest ; /click left item',
             condition = function(ctx) return ctx.task:isComplete(TASK) end,
             desc = 'open the chest to complete the trial' }),
     },

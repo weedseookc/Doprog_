@@ -40,6 +40,8 @@ require('tests.test_travel_graph')
 require('tests.test_engine')
 require('tests.test_targeting')
 require('tests.test_mechanics')
+require('tests.test_clue_solver')
+require('tests.test_portal_solver')
 require('tests.test_safety')
 require('tests.test_config')
 

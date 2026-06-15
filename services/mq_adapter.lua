@@ -217,6 +217,20 @@ function MqAdapter:spawnDistance(id)
     return safe(function() return self._mq.TLO.Spawn(id).Distance3D() end, 1e9)
 end
 
+--- Model height of a spawn (used to rank mob "size" for clue puzzles), 0 if unknown.
+---@param id integer
+---@return number
+function MqAdapter:spawnHeight(id)
+    return safe(function() return self._mq.TLO.Spawn(id).Height() end, 0)
+end
+
+--- Number of spawns matching a search string (e.g. counting portals per element).
+---@param search string
+---@return integer
+function MqAdapter:spawnCount(search)
+    return safe(function() return self._mq.TLO.SpawnCount(search)() end, 0)
+end
+
 --- Target a spawn by id.
 ---@param id integer
 function MqAdapter:target(id)

@@ -23,7 +23,9 @@
 ---@field npc? doprog.SpawnQuery       # giver / hand-in / interaction target
 ---@field taskName? string             # task this step relates to
 ---@field objective? integer           # objective index used for completion
----@field target? doprog.SpawnQuery    # combat target (combat steps)
+--- Combat target: a fixed spawn, or a resolver that returns the next target
+--- (or false = "still deciding, wait", nil = "nothing left").
+---@field target? doprog.SpawnQuery|fun(ctx: doprog.StepContext): (doprog.SpawnQuery|false|nil)
 ---@field item? string                 # item name (loot/handin steps)
 ---@field count? integer               # required count (loot steps)
 ---@field condition? fun(ctx: doprog.StepContext): boolean  # wait-step predicate
