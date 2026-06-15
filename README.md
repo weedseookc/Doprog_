@@ -106,16 +106,19 @@ Givers that live in another zone (several partisan/mission givers are in Stratos
 or Esianti) are handled per-step, so pickup/hand-in navigate to the giver's zone
 while combat happens in the objective zone.
 
-## Adding / correcting quest data
+## Quest data
 
-Quest givers come from `tools/gen_quests.lua`'s data table. Edit it and run:
+All 46 TBL quests/missions are encoded by hand from their individual
+tbl.eqresource.com pages — real giver NPCs, request phrases, objective counts
+and indices, named mobs, item turn-ins, say-phrase puzzles, porter hops, and
+mission request/zone-in phrases. Each quest file cites its source page and the
+mechanics in its header comment. To pick a different Trial of Smoke, change the
+`require` in `zones/plane_of_smoke/index.lua`.
 
-```
-lua5.4 tools/gen_quests.lua
-```
-
-to regenerate the `zones/**/*.lua` files. To pick a different Trial of Smoke,
-change the `require` in `zones/plane_of_smoke/index.lua`.
+`tools/gen_quests.lua` is the original scaffold generator (givers only); the
+shipped quest files have since been hand-authored with full mechanics, so edit
+the `zones/**/*.lua` files directly. Anything still needing an in-game read is
+tracked in `DATA.md`.
 
 ## Field calibration
 

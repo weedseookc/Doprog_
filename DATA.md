@@ -1,54 +1,51 @@
 # Field calibration checklist
 
-doprog ships with the full TBL progression structure and real quest-giver names
-(from tbl.eqresource.com). A short list of values can only be read in-game; the
-framework runs and routes without them (it navigates to NPCs and targets by spawn
-name), but filling these in sharpens inter-zone travel and a couple of edges.
+All 46 TBL quests/missions are encoded from their individual tbl.eqresource.com
+pages: real giver NPCs, request phrases, objective counts and indices, named
+mobs, item turn-ins, say-phrase puzzles and porter hops. The only things that
+still need an in-game read are listed below — the framework runs and routes
+without them (it navigates to NPCs/targets by spawn name), and these just sharpen
+inter-zone travel and a couple of edges.
 
 Use `/loc` in-game for coordinates and confirm zone short names with
 `${Zone.ShortName}`.
 
 ## 1. Inter-zone travel — `data/zones.lua`
 
-For each edge, set `loc` (where to stand) and, for portals, the exact `action`
-(the clicky command or hail). These are the only blanks in the zone graph; its
-shape (which zones connect) is already correct.
+For each edge set `loc` (where to stand) and, for portals, the exact `action`.
+The graph shape (which zones connect) is correct; only these values are blank:
 
-- [ ] potranquility → stratos — entry portal command + loc
-- [ ] stratos ↔ potranquility — zone-line loc
-- [ ] stratos → smoke — Trials of Smoke entry (after Fight Fire) + loc
-- [ ] smoke → stratos — trial exit loc
-- [ ] stratos ↔ esianti — portal loc/action
-- [ ] esianti ↔ empyr — portal loc/action
-- [ ] empyr ↔ aalishai — portal loc/action
-- [ ] aalishai ↔ mearatas — portal loc/action
-- [ ] doomfire → stratos, chamberoftears → stratos — return portals
+- [ ] potranquility ↔ stratos (entry portal command + loc)
+- [ ] stratos → smoke (Trials of Smoke entry) and back
+- [ ] stratos ↔ esianti ↔ empyr ↔ aalishai ↔ mearatas (portal loc/action each)
+- [ ] doomfire → stratos, chamberoftears → stratos return portals
+- [ ] (optional) PoK-book routing to the classic zones used by Fragmented Coterie
+      (timorous, sro, barren, stonebrunt) and to `relic` for Strange Magic.
 
-## 2. Unconfirmed NPC names
+## 2. A few unconfirmed NPC names
 
-- [ ] **Plane of Smoke** mercenary task giver — name not on eqresource's NPC list.
-      Set in `zones/plane_of_smoke/mercenary_plane_of_smoke.lua`, then add it back
-      to that zone's `index.lua` (it is intentionally omitted so it can't block
-      progression).
-- [ ] **Doomfire** "Strange Magic" giver — currently assumed to be
-      *Unrepentant Sunrise* (confirmed giver of Delivery and Remodeling). Verify.
+- [ ] **Plane of Smoke** mercenary giver — not on eqresource's NPC list; the
+      `mercenary_plane_of_smoke` quest is intentionally left out of that zone's
+      index so it can't block progression. Fill the name and re-add it.
+- [ ] **Doomfire** "Strange Magic" — started by clicking the door in Relic, the
+      Artifact City; confirm the zone short name (`relic`) and door targeting.
 - [ ] **Aalishai** "Enter Mearatas" giver — eqresource lists it ambiguously
       ("Ring or Blazing Sorrows Darkness"); encoded as *Blazing Sorrows Darkness*.
 
-## 3. Objective indices (multi-objective tasks)
+## 3. In-game tuning that can't be pre-baked
 
-Generated quests model the common two-objective shape: objective 1 = combat,
-hand-in = the "return and report" objective. Tasks with several distinct kill
-objectives need one CombatStep per objective with the right `objective = N`.
-Confirm per task on its eqresource page and edit `tools/gen_quests.lua` (or the
-generated file) accordingly. Known so far:
+- **Trial of Three / Wending Ways** boss order is determined by clue lines /
+  portal counts at run time (randomized). doprog targets the bosses; a clue/
+  portal parser to enforce the exact order is a planned enhancement.
+- **Window automations** (task-accept, give/trade, ground-spawn `/itemtarget`,
+  chest open) use standard UI/notify commands; confirm the window/button names
+  match your client/server build. All such commands are localized to the step
+  files and `services/mq_adapter.lua` for easy adjustment.
+- **Faction/sneak gates** (e.g. Earning One's Place, several "say to NPC" steps)
+  are noted in comments but not automated; ensure standing or use sneak.
 
-- Soldier of Air: obj1 = defeat 5 invading forces (Brass Phoenix Brigade in the
-  smoke area), obj2 = return to Grieving Soul Scent.
-- Do Unto Them: obj1 = defeat 9 (blue-con near the PoT zone line), obj2 = return.
+## 4. Task-name spelling
 
-## 4. Task name spelling
-
-The Task TLO is matched by name (`completionTask`). If a `taskExists` lookup ever
-fails in-game, reconcile the spelling/capitalization in the quest file with the
-exact in-game task journal title.
+Quest completion is matched by name (`completionTask`). If a `taskExists` lookup
+ever fails in-game, reconcile the spelling/capitalization in the quest file with
+the exact in-game task journal title.
