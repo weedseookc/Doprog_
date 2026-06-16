@@ -35,6 +35,10 @@ local GUARDIAN = { name = 'Guardian', npc = true, radius = 1000 }
 ---@type doprog.SpawnQuery
 local ADDS = { name = 'shardling', npc = true, radius = 1000 }
 
+-- Door start: target the door, click it, accept the offered task window.
+local START_DOOR = '/multiline ; /doortarget ; /click left door'
+    .. ' ; /notify TaskSelectWnd TSEL_AcceptButton leftmouseup'
+
 ---@type doprog.Quest
 return Quest.new({
     name = TASK,
@@ -43,8 +47,7 @@ return Quest.new({
     completionTask = TASK,
     steps = {
         -- Start: click the door in Relic, the Artifact City, then accept the task.
-        S.click({ zone = 'relic',
-            action = '/multiline ; /doortarget ; /click left door ; /notify TaskSelectWnd TSEL_AcceptButton leftmouseup',
+        S.click({ zone = 'relic', action = START_DOOR,
             condition = function(ctx) return ctx.task:has(TASK) end,
             desc = 'click the door in Relic, the Artifact City to start Strange Magic' }),
         -- Obj 1: right-click the provided siphon to gather magic.

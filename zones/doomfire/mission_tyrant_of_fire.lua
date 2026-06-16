@@ -28,6 +28,10 @@ local FENNIN = { name = 'Fennin Ro', npc = true }
 local TANKS = { name = 'tank', npc = true, radius = 1000, exclude = { 'Fennin' } }
 local INVADERS = { name = 'invader', npc = true, radius = 1000, exclude = { 'Fennin' } }
 
+-- Request: right-click the ring in PoT, then accept the offered task window.
+local REQUEST_RING = '/multiline ; /itemnotify "Golden Ruby and Garnet Ring" rightmouseup'
+    .. ' ; /notify TaskSelectWnd TSEL_AcceptButton leftmouseup'
+
 ---@type doprog.Mission
 return Mission.new({
     name = TASK,
@@ -43,8 +47,7 @@ return Mission.new({
     } },
     steps = {
         -- Request by right-clicking the ring in the Plane of Tranquility.
-        S.click({ zone = 'potranquility',
-            action = '/multiline ; /itemnotify "Golden Ruby and Garnet Ring" rightmouseup ; /notify TaskSelectWnd TSEL_AcceptButton leftmouseup',
+        S.click({ zone = 'potranquility', action = REQUEST_RING,
             condition = function(ctx) return ctx.task:has(TASK) end,
             desc = 'right-click the Golden Ruby and Garnet Ring in PoT to get the task' }),
         -- Zone in via Unrepentant Sunrise (say "ready").
