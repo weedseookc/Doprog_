@@ -14,12 +14,14 @@
 --- step WAITs rather than killing in the wrong order (a wrong kill resets it).
 --- See clue_solver.lua for the decode/resolve details and its limits.
 ---
---- Bosses (all max melee ~35-40k, AE-warned by an emote):
----   Dark Waters Sing   (water): Water Blast (DD+knockback), Boiling Mana (mana AE)
----   Warm Heart Flickers(fire) : Flaming Defense (DS), Burning Embers (AE + DoT)
----   Shadows of Stone   (earth): Crushing Earth (AE + 3s stun), Choking Dust (silence)
---- All members must be in the room on engage or take a blind DoT; mobs leash at
---- the room edges.
+--- Bosses (max melee ~35-40k each):
+---   Dark Waters Sing   (water)
+---   Warm Heart Flickers(fire)
+---   Shadows of Stone   (earth)
+--- Per eqresource comments: every member must enter the room together on engage
+--- or be kicked out / blinded; stay on the hailed mob and do NOT push the bosses
+--- to the room edges (they leash). doprog therefore holds the lead on the targeted
+--- boss (no flee/kite) so it is never dragged out to a leash point.
 
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')

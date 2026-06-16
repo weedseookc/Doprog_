@@ -27,7 +27,7 @@ return Quest.new({
             desc = 'accept Do Unto Them (say "destroy the djinn")' }),
         S.combat({ zone = 'stratos', taskName = 'Do Unto Them', objective = 1,
             desc = 'defeat 9 blue-con residents near the PoT zone line' }),
-        S.handin({ zone = 'stratos', npc = GIVER, taskName = 'Do Unto Them',
-            desc = 'speak with Ashen Wandering Horizon to finish' }),
+        S.handin({ zone = 'stratos', npc = GIVER, taskName = 'Do Unto Them', objective = 2,
+            desc = 'speak with Ashen Wandering Horizon (obj 2)' }),
     },
 })

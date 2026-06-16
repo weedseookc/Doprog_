@@ -35,10 +35,25 @@ return Mission.new({
         S.click({ zone = 'stratos', npc = GIVER, action = '/say ready',
             desc = 'enter the Fight Fire instance (say "ready")' }),
         -- Inside the instance: no zone enforcement (instance short name varies).
+        -- Phase 1: talk to an invader NPC to initiate; it aggros and a 2nd wave
+        -- follows. Gate on the 0/12 counter starting (or the step's first kill).
+        S.click({ npc = { name = 'invader', npc = true }, action = '/say Hail',
+            condition = function(ctx)
+                return ctx.mq:findSpawn({ name = 'invader', npc = true }) == nil
+                    or ctx.task:objectiveDone(TASK, 1)
+            end,
+            desc = 'talk to the invaders to initiate the fight (obj 1)' }),
+        -- Phase 1 combat: defeat 12 invaders (two waves). Host fights; doprog
+        -- targets invaders and watches the 0/12 counter.
         S.combat({ taskName = TASK, objective = 1,
-            desc = 'defeat 12 invaders (talk to NPCs to initiate; 2nd wave follows)' }),
+            target = { name = 'invader', npc = true },
+            desc = 'defeat 12 invaders (2nd wave follows the first)' }),
+        -- Phase 2: 4 aggro-linked efreeti lieutenants spawn; they cannot be
+        -- separated. If they go inactive the host re-activates by Balancing the
+        -- active one(s); doprog targets them and watches the 0/4 counter.
         S.combat({ taskName = TASK, objective = 2,
-            desc = 'defeat 4 aggro-linked Efreeti lieutenants (cannot be separated)' }),
+            target = { name = 'lieutenant', npc = true },
+            desc = 'defeat 4 aggro-linked efreeti lieutenants (cannot be separated)' }),
         -- Receive judgment.
         S.click({ npc = { name = 'Evasion Flame Desires', npc = true },
             action = '/say grieving soul scent',

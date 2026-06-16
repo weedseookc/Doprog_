@@ -87,11 +87,13 @@ return Quest.new({
             desc = 'kill a jopal (NW) for the fire clicky (obj 4)' }),
         S.wait({ condition = objDone(4),
             desc = 'use the fire clicky in the SW building to light the fire (obj 4)' }),
-        -- 5: flavor the water under the falls.
-        S.wait({ condition = objDone(5),
+        -- 5: flavor the water under the falls (right-click Nine Rose Dust there).
+        S.click({ zone = 'esianti', action = '/itemnotify "Nine Rose Dust" rightmouseup',
+            condition = objDone(5),
             desc = 'right-click Nine Rose Dust at the Isle of Radiant Mist waterfall (obj 5)' }),
-        -- 6: improve 5 brume armors with Nine Rose Dust.
-        S.wait({ condition = objDone(6),
+        -- 6: improve 5 brume armors — right-click Nine Rose Dust on each (0/5).
+        S.click({ zone = 'esianti', npc = { name = 'Brume Armor', npc = true },
+            action = '/itemnotify "Nine Rose Dust" rightmouseup', condition = objDone(6),
             desc = 'right-click Nine Rose Dust on 5 Brume Armors around the zone (obj 6)' }),
         -- 7: hot foot a mortal (kill jopal, loot clicky, use SE building).
         S.combat({ zone = 'esianti', target = { name = 'jopal', npc = true },

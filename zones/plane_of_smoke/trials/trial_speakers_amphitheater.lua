@@ -1,16 +1,21 @@
 --- doprog.zones.plane_of_smoke.trials.trial_speakers_amphitheater
 ---
---- Trial of the Speaker's Amphitheater (group trial). Source:
+--- Trial of the Speaker's Amphitheater (group trial, 1-6). Source:
 --- tbl.eqresource.com/trialofthespeakersamphitheater
 --- Started by saying "prepared" to Waves of Saffron Sky inside the Trials of
---- Smoke instance. One of five trials; any one progresses you.
+--- Smoke instance. One of five trials; defeating any one progresses you.
+--- 6h limit, 60h lockout, repeatable.
 ---
---- Timed waves drop sigils (clickies) that teleport up to three members to a
---- named boss platform. Defeat the four named (random pairs), then use the
---- "sigil of the overlord of ash" to reach the final boss; the final boss heals
---- to full if anyone remains below. Then open the chest.
----   Alabaster Moonbreeze (blue, SE), Sunbird of the Dawn (red, NW),
----   Grinning Monsoon (purple, SW), Diamond Earthshaker (orange, NE).
+--- FLOW (per eqresource walkthrough): timed trash waves drop sigil clickies that
+--- port a few members to the four named mini-boss platforms — "wait to use the
+--- sigils until the trash waves are done, there are 3 waves between" them. The
+--- four named each pair with a sigil:
+---   Alabaster Moonbreeze  - Sigil of the Soaring Heart  (blue,   SE)
+---   Sunbird of the Dawn   - Sigil of the Golden Flame   (red,    NW)
+---   Grinning Monsoon      - Sigil of the Darkening Depths(purple, SW)
+---   Diamond Earthshaker   - Sigil of the Hardening Heart (orange, NE)
+--- After all four minis fall, the final sigil ports to the ultimate boss; defeat
+--- it to complete the task, then open the chest.
 
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
@@ -19,16 +24,17 @@ local TASK = "Trial of the Speaker's Amphitheater"
 ---@type doprog.SpawnQuery
 local STARTER = { name = 'Waves of Saffron Sky', npc = true }
 
--- The four named spawn in RANDOM pairs, so there is no fixed order: doprog
--- targets whichever named is currently up.
+-- The four sigil-platform named. They are reached by clicking the matching dropped
+-- sigil; doprog targets whichever named is currently up (waves spawn them in no
+-- fixed order, so this drives both the trash-wave clears and the minis).
 local NAMED = {
-    'Alabaster Moonbreeze',  -- blue sigil, SE
-    'Sunbird of the Dawn',   -- red sigil, NW
-    'Grinning Monsoon',      -- purple sigil, SW
-    'Diamond Earthshaker',   -- orange sigil, NE
+    'Alabaster Moonbreeze', -- Sigil of the Soaring Heart   (blue, SE)
+    'Sunbird of the Dawn',  -- Sigil of the Golden Flame    (red, NW)
+    'Grinning Monsoon',     -- Sigil of the Darkening Depths (purple, SW)
+    'Diamond Earthshaker',  -- Sigil of the Hardening Heart (orange, NE)
 }
 
---- Pick any living named; once all four are down, the final boss; then nil.
+--- Target any living named mini; once all four are down, return nil.
 ---@param ctx doprog.StepContext
 ---@return doprog.SpawnQuery|false|nil
 local function nextNamed(ctx)
@@ -48,15 +54,17 @@ return Quest.new({
     completionTask = TASK,
     steps = {
         S.pickup({ zone = 'smoke', npc = STARTER, taskName = TASK, request = 'prepared',
-            desc = "start Trial of the Speaker's Amphitheater (say \"prepared\")" }),
-        -- Clear the four sigil-platform named in whatever order they come up.
+            desc = "start Trial of the Speaker's Amphitheater (say \"prepared\" inside)" }),
+        -- Defeat the four sigil-platform named in whatever order they come up.
         S.combat({ zone = 'smoke', target = nextNamed,
-            desc = 'defeat the 4 sigil named (random pairs): Moonbreeze/Sunbird/Monsoon/Earthshaker' }),
-        -- Then the final boss (heals to full if anyone is left below).
+            desc = 'defeat the 4 sigil named: Moonbreeze/Sunbird/Monsoon/Earthshaker' }),
+        -- All four down: the final sigil ports to the ultimate boss; complete the
+        -- task by defeating it (final boss name is unpublished, so completion is
+        -- gated on the task objective rather than a fabricated spawn name).
         S.combat({ zone = 'smoke', taskName = TASK,
-            target = { name = 'overlord of ash', npc = true },
-            desc = 'use the sigil of the overlord of ash and defeat the final boss' }),
+            desc = 'use the final sigil and defeat the ultimate boss' }),
         S.click({ action = '/multiline ; /itemtarget chest ; /click left item',
-            condition = function(ctx) return ctx.task:isComplete(TASK) end, desc = 'open the chest' }),
+            condition = function(ctx) return ctx.task:isComplete(TASK) end,
+            desc = 'open the chest to complete the trial' }),
     },
 })

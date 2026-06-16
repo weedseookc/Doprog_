@@ -1,17 +1,21 @@
 --- doprog.zones.plane_of_smoke.trials.trial_wending_ways
 ---
---- Trial of the Wending Ways (group trial). Source:
+--- Trial of the Wending Ways (group trial, 1-6). Source:
 --- tbl.eqresource.com/trialofthewendingways
 --- Started by saying "prepared" to Waves of Saffron Sky inside the Trials of
---- Smoke instance. One of five trials; any one progresses you.
+--- Smoke instance. One of five trials; defeating any one progresses you.
+--- 6h limit, 60h lockout, repeatable.
 ---
---- ORDER: the element with the MOST portals visible is fought first; recount after
---- each kill. doprog SOLVES this with `portal_solver` (counts portals per element
---- each frame) and feeds the order to a dynamic-target CombatStep. The fire boss
---- additionally must be dragged to a brazier and is only damageable when it
---- "gains solidity" (positioning mechanic on that target).
----   Blazing Triumphant Bulwark (fire), Obsidian Undefeated Shield (earth, splits
----   at 50%), Flowing Unconquered Guard (water), Blustering Stalwart Screen (wind).
+--- ORDER (per eqresource): "the most portal types you see around the area
+--- determines which ambassador to fight next" — recount after each kill. doprog
+--- SOLVES this with `portal_solver`, which counts portals per element each frame
+--- (white=air, red=fire, blue=water, green=earth) and feeds the most-portals
+--- element's boss to a dynamic-target CombatStep.
+---   Blazing Triumphant Bulwark (fire): drag him onto the burning areas until the
+---     emote about "changing back" (positioning mechanic below).
+---   Obsidian Undefeated Shield (earth): splits into 2 adds at 50% (host fights the
+---     adds; doprog keeps targeting any living boss/add via the solver).
+---   Flowing Unconquered Guard (water), Blustering Stalwart Screen (wind).
 
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
@@ -21,9 +25,11 @@ local TASK = 'Trial of the Wending Ways'
 ---@type doprog.SpawnQuery
 local STARTER = { name = 'Waves of Saffron Sky', npc = true }
 
--- TODO(calibrate): the brazier /loc to drag the fire boss to.
+-- The fire boss must be dragged onto a "burning area"; its floor /loc is not
+-- published, so it is left nil (the drag mechanic is a no-op until calibrated
+-- in-game). The emote substring below still arms the watcher for that reaction.
 ---@type doprog.Vec3?
-local BRAZIER = nil
+local BURNING_AREA = nil
 
 local solver = PortalSolver.new({
     { name = 'Blazing Triumphant Bulwark', element = 'fire' },
@@ -40,18 +46,19 @@ return Quest.new({
     completionTask = TASK,
     steps = {
         S.pickup({ zone = 'smoke', npc = STARTER, taskName = TASK, request = 'prepared',
-            desc = 'start Trial of the Wending Ways (say "prepared")' }),
+            desc = 'start Trial of the Wending Ways (say "prepared" inside the instance)' }),
         -- Fight the bosses in most-portals-first order, recomputed each frame.
         S.combat({
             zone = 'smoke',
             target = function(ctx) return solver:nextTarget(ctx) end,
             mechanics = {
-                { react = 'drag', loc = BRAZIER,
-                  desc = 'if fighting the fire boss: drag it to a brazier (damage it only when solid)' },
+                { react = 'drag', loc = BURNING_AREA, emote = 'changing back',
+                  desc = 'drag Blazing Triumphant Bulwark onto a burning area to keep it damageable' },
             },
-            desc = 'defeat the four elemental bosses, most-portals-first',
+            desc = 'defeat the four elemental ambassadors, most-portals-first',
         }),
         S.click({ action = '/multiline ; /itemtarget chest ; /click left item',
-            condition = function(ctx) return ctx.task:isComplete(TASK) end, desc = 'open the chest' }),
+            condition = function(ctx) return ctx.task:isComplete(TASK) end,
+            desc = 'open the chest to complete the trial' }),
     },
 })

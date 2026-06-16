@@ -66,6 +66,13 @@ function ClickStep:execute(ctx)
 
     if os.clock() - self._clickedAt > 3 then
         self._zoneBefore = ctx.mq:zoneShortName()
+        -- Target the NPC first: EQ dialogue (/say keywords, hails) only registers
+        -- against a targeted NPC in range, so this is what makes say-to-NPC,
+        -- porter, and turn-in-style click steps actually fire.
+        if self._npc then
+            local id = ctx.mq:findSpawn(self._npc)
+            if id then ctx.mq:target(id) end
+        end
         ctx.log:Info('clicking: %s', self.desc)
         ctx.mq:cmd(self._action)
         self._clickedAt = os.clock()

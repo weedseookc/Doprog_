@@ -40,7 +40,7 @@ return Quest.new({
             desc = 'defeat the persistent petitioner "Still Ore" twice' }),
         S.click({ zone = 'stratos', npc = PORTER, action = '/say assist', completeAfter = 4000,
             desc = 'return to Iron Lightning Spirit (Soaring Moon: assist)' }),
-        S.handin({ zone = 'stratos', npc = GIVER, taskName = "A Petitioner's Plight",
-            desc = 'speak with Iron Lightning Spirit to finish' }),
+        S.handin({ zone = 'stratos', npc = GIVER, taskName = "A Petitioner's Plight", objective = 3,
+            desc = 'speak with Iron Lightning Spirit (obj 3)' }),
     },
 })

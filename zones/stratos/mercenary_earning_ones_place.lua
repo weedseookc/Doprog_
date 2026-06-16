@@ -33,7 +33,10 @@ return Quest.new({
             desc = "accept Earning One's Place (say \"worthiness\")" }),
         S.click({ zone = 'stratos', npc = PORTER, action = '/say accept', completeAfter = 4000,
             desc = 'port to the Efreeti area (Soaring Moon: accept)' }),
+        -- Per player tip: the Efreeti can be KOS on arrival; break line of sight
+        -- behind a tree until engaged. doprog only repositions; the host fights.
         S.combat({ zone = 'stratos', taskName = "Earning One's Place", objective = 1,
-            desc = 'defeat 5 Efreeti in the Djinn-Efreeti war' }),
+            mechanics = { { react = 'hide', desc = 'hide behind a tree if KOS on arrival' } },
+            desc = 'defeat 5 Efreeti in the Djinn-Efreeti war (obj 1)' }),
     },
 })

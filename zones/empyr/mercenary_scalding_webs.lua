@@ -2,8 +2,9 @@
 ---
 --- Scalding Webs We Weave (solo mercenary). Source:
 --- tbl.eqresource.com/scaldingwebsweweave
---- Giver/turn-in: Charred Forest (Empyr). Request: "giant lava spiders".
----   Kill Giant Lava Spiders 0/5 (Northern Middle area).
+--- Giver: Charred Forest (Empyr: Realms of Ash). Request: "giant lava spiders".
+--- Single objective: Kill Giant Lava Spiders 0/5 (Northern Middle area). The
+--- page lists no item turn-in, so the task completes on the final kill.
 
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
@@ -11,6 +12,7 @@ local S = require('doprog.steps')
 local TASK = 'Scalding Webs We Weave'
 ---@type doprog.SpawnQuery
 local GIVER = { name = 'Charred Forest', npc = true }
+local SPIDER = { name = 'Giant Lava Spider', npc = true }
 
 ---@type doprog.Quest
 return Quest.new({
@@ -21,10 +23,9 @@ return Quest.new({
     prereq = { tasks = { 'Soldier of Air', 'Fight Fire', 'Trial of Three' } },
     steps = {
         S.pickup({ zone = 'empyr', npc = GIVER, taskName = TASK, request = 'giant lava spiders',
-            desc = 'accept Scalding Webs We Weave (say "giant lava spiders")' }),
-        S.combat({ zone = 'empyr', taskName = TASK, objective = 1,
-            target = { name = 'Giant Lava Spider', npc = true },
-            desc = 'kill 5 Giant Lava Spiders (N middle)' }),
-        S.handin({ zone = 'empyr', npc = GIVER, taskName = TASK, desc = 'return to Charred Forest' }),
+            desc = 'accept Scalding Webs We Weave (hail Charred Forest, say "giant lava spiders")' }),
+        -- 1: kill 5 Giant Lava Spiders in the Northern Middle area; gated on obj 1.
+        S.combat({ zone = 'empyr', taskName = TASK, objective = 1, target = SPIDER,
+            desc = 'kill 5 Giant Lava Spiders (Northern Middle area)' }),
     },
 })
