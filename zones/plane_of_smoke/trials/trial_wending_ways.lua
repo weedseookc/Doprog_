@@ -31,11 +31,14 @@ local STARTER = { name = 'Waves of Saffron Sky', npc = true }
 ---@type doprog.Vec3?
 local BURNING_AREA = nil
 
+-- Portal/steam colour -> element (per comments: White=Lightning/Air, Red=Fire,
+-- Blue=Water, Green=Earth). The solver counts each boss's portalSearch each frame
+-- and fights the element with the most portals showing.
 local solver = PortalSolver.new({
-    { name = 'Blazing Triumphant Bulwark', element = 'fire' },
-    { name = 'Obsidian Undefeated Shield', element = 'earth' },
-    { name = 'Flowing Unconquered Guard', element = 'water' },
-    { name = 'Blustering Stalwart Screen', element = 'wind' },
+    { name = 'Blazing Triumphant Bulwark', element = 'fire', portalSearch = 'red steam' },
+    { name = 'Obsidian Undefeated Shield', element = 'earth', portalSearch = 'green steam' },
+    { name = 'Flowing Unconquered Guard', element = 'water', portalSearch = 'blue steam' },
+    { name = 'Blustering Stalwart Screen', element = 'wind', portalSearch = 'white steam' },
 })
 
 ---@type doprog.Quest
@@ -52,8 +55,10 @@ return Quest.new({
             zone = 'smoke',
             target = function(ctx) return solver:nextTarget(ctx) end,
             mechanics = {
-                { react = 'drag', loc = BURNING_AREA, emote = 'changing back',
-                  desc = 'drag Blazing Triumphant Bulwark onto a burning area to keep it damageable' },
+                -- Fire boss: "becomes insubstantial" -> drag it onto a burning area
+                -- to make it "gain solidity" again (it locks form at ~57% and ~24%).
+                { react = 'drag', loc = BURNING_AREA, emote = 'becomes insubstantial',
+                  desc = 'drag Blazing Triumphant Bulwark onto a burning area to re-solidify it' },
             },
             desc = 'defeat the four elemental ambassadors, most-portals-first',
         }),

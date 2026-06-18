@@ -7,12 +7,15 @@
 --- not already beaten progresses you. Single 0/1 objective: "Defeat any trial
 --- that you have not already defeated and claim your reward."
 ---
---- Event loop (x3): the boss despawns, yellow-con adds pop (stunnable) — clear
---- them, then defeat the correct green-con mobs until the boss re-pops in a new
---- elemental form. A Fireball aura targets one random player and follows them;
---- doprog flees the live aura spawn so the lead is not the one standing in it.
---- After the third form dies, open the chest. doprog drives targets + positions;
---- the host deals all damage.
+--- THE TRICK (per ZAM patch note + RedGuides): the boss is "Indomitable Onyx",
+--- a single named that cycles 3 elemental forms. Burn it until it depops; while
+--- it is down, KILL "a swirl of disturbed crust" (target a_swirl_of_disturbed_
+--- crust05) to instantly re-pop it in the next form; repeat 3 times. Yellow-con
+--- "ashen elementals" also pop -- clear them (and for the "All Alone" achievement
+--- Onyx must die with zero ashen elementals up). The Fireball aura (~150-175k DD)
+--- locks onto a random player and follows; the intended play is to EAT it and heal
+--- through, NOT dodge -- so doprog does not flee it. doprog targets the right mob
+--- each phase; the host deals damage. Then open the chest.
 
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
@@ -20,6 +23,21 @@ local S = require('doprog.steps')
 local TASK = "Trial of the Ashes of Rusted Cliff's Glory"
 ---@type doprog.SpawnQuery
 local STARTER = { name = 'Waves of Saffron Sky', npc = true }
+local ONYX = { name = 'Indomitable Onyx', npc = true }
+local SWIRL = { name = 'a_swirl_of_disturbed_crust05', npc = true }
+local ASHEN = { name = 'ashen elemental', npc = true }
+
+--- Onyx when it is up; otherwise the swirl that re-pops it; otherwise clear the
+--- ashen-elemental adds. Returns false (wait) between phases -- completion is
+--- driven by the task objective, not by a momentary empty target.
+---@param ctx doprog.StepContext
+---@return doprog.SpawnQuery|false
+local function nextTarget(ctx)
+    if ctx.mq:findSpawn(ONYX) then return ONYX end
+    if ctx.mq:findSpawn(SWIRL) then return SWIRL end
+    if ctx.mq:findSpawn(ASHEN) then return ASHEN end
+    return false
+end
 
 ---@type doprog.Quest
 return Quest.new({
@@ -30,17 +48,13 @@ return Quest.new({
     steps = {
         S.pickup({ zone = 'smoke', npc = STARTER, taskName = TASK, request = 'prepared',
             desc = 'speak with Waves of Saffron Sky to start the trial (say "prepared")' }),
-        -- Single 0/1 objective: doprog advertises NEED_COMBAT so the host clears
-        -- the yellow-con adds then the green-con mobs each cycle until the shifting
-        -- boss is downed (3 forms). Fleeing the Fireball aura keeps the lead clear.
+        -- Burn Onyx -> on depop kill the swirl to re-pop the next form (x3); clear
+        -- ashen elementals between. Completion is the trial's single 0/1 objective.
         S.combat({
             zone = 'smoke',
             taskName = TASK,
-            mechanics = {
-                { react = 'flee', spawn = { name = 'a_swirl_of_disturbed_crust' }, distance = 40,
-                  desc = 'flee the Fireball aura (it follows one random player)' },
-            },
-            desc = 'clear yellow adds then green-con mobs each cycle; defeat the shifting boss (x3)',
+            target = nextTarget,
+            desc = 'burn Indomitable Onyx; kill a_swirl_of_disturbed_crust05 to re-pop each form (x3)',
         }),
         S.click({ zone = 'smoke', action = '/multiline ; /itemtarget chest ; /click left item',
             condition = function(ctx) return ctx.task:isComplete(TASK) end,

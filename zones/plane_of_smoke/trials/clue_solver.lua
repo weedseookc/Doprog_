@@ -36,22 +36,36 @@
 local ClueSolver = {}
 ClueSolver.__index = ClueSolver
 
--- Decode table: emote substring -> (dimension, value). Phrases are taken from the
--- eqresource walkthrough and player comments.
+-- Decode table: emote substring -> (dimension, value). Substrings are quoted
+-- verbatim from the 22 published Trial of Three clue lines (references/eqresource/
+-- trialofthree.md). Only SIZE and POSITION clues are listed, because those are the
+-- two attributes doprog can actually observe (Spawn.Height and distance-from-entry);
+-- WEAPON and ELEMENT clues are not machine-readable and would only add noise, so a
+-- puzzle whose 1st+3rd clues are weapon/element-only stays unsolved (we WAIT rather
+-- than guess and reset the trial).
 local DECODE = {
+    -- size: smallest
     { match = 'least size', dim = 'size', val = 'smallest' },
+    { match = 'of smallest stature', dim = 'size', val = 'smallest' },
+    -- size: largest
     { match = 'greatest in size', dim = 'size', val = 'largest' },
+    { match = 'greatest of the three', dim = 'size', val = 'largest' },
+    { match = 'is the greatest of the three', dim = 'size', val = 'largest' },
+    -- size: medium
+    { match = 'middling size', dim = 'size', val = 'medium' },
+    { match = 'of middling size', dim = 'size', val = 'medium' },
     { match = 'neither largest nor tiniest', dim = 'size', val = 'medium' },
+    -- position: front (closest to the door / boldest / most ready)
     { match = 'stands foremost', dim = 'pos', val = 'front' },
+    { match = 'most ready for battle', dim = 'pos', val = 'front' },
+    { match = 'is boldest', dim = 'pos', val = 'front' },
+    -- position: rear (furthest / least ready)
     { match = 'furthest from battle', dim = 'pos', val = 'rear' },
     { match = 'stands to the rear', dim = 'pos', val = 'rear' },
+    { match = 'least ready for battle', dim = 'pos', val = 'rear' },
+    -- position: middle
     { match = 'stands mid-most', dim = 'pos', val = 'middle' },
     { match = 'neither foremost nor furthest', dim = 'pos', val = 'middle' },
-    { match = 'modest weapon', dim = 'weapon', val = 'rapier' },
-    { match = 'rapier', dim = 'weapon', val = 'rapier' },
-    { match = 'greatest of arms', dim = 'weapon', val = 'largest' },
-    { match = 'least of weapons', dim = 'weapon', val = 'smallest' },
-    { match = 'in its element', dim = 'element', val = 'room' },
 }
 
 ---@param bosses doprog.ClueBoss[]
@@ -126,13 +140,25 @@ function ClueSolver:_resolve(ctx, clue)
 end
 
 --- Try to compute the [first, second, third] kill order from captured clues.
+--- The trial may emit several clue lines for the 1st mob and several for the 3rd
+--- (size AND position AND ...), so we resolve every captured clue and collect the
+--- DISTINCT bosses they point at, in first-seen order. When exactly two distinct
+--- bosses are identified, they are the 1st and 3rd kills and the remaining boss is
+--- the 2nd by elimination (per the published "clues for 1st and 3rd only" rule).
 ---@private
 ---@param ctx doprog.StepContext
 function ClueSolver:_solve(ctx)
-    if self._order or #self._clues < 2 then return end
-    local first = self:_resolve(ctx, self._clues[1])
-    local third = self:_resolve(ctx, self._clues[2])
-    if not first or not third or first == third then return end
+    if self._order or #self._clues < 1 then return end
+    local seen, distinct = {}, {}
+    for _, clue in ipairs(self._clues) do
+        local boss = self:_resolve(ctx, clue)
+        if boss and not seen[boss] then
+            seen[boss] = true
+            distinct[#distinct + 1] = boss
+        end
+    end
+    if #distinct ~= 2 then return end -- need exactly the 1st and 3rd identified
+    local first, third = distinct[1], distinct[2]
     local second
     for _, b in ipairs(self._bosses) do
         if b.name ~= first and b.name ~= third then second = b.name break end

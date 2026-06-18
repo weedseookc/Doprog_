@@ -14,8 +14,15 @@
 ---   Sunbird of the Dawn   - Sigil of the Golden Flame   (red,    NW)
 ---   Grinning Monsoon      - Sigil of the Darkening Depths(purple, SW)
 ---   Diamond Earthshaker   - Sigil of the Hardening Heart (orange, NE)
---- After all four minis fall, the final sigil ports to the ultimate boss; defeat
---- it to complete the task, then open the chest.
+--- After all four minis fall, the "Sigil of the Overlord of Ash" ports to the
+--- final boss (the "Overlord of Ash" -- no other published mob name); defeat it to
+--- complete the task, then open the chest.
+--- HAZARD: a "Tumbling Boulder" spawns between the two named deaths in a pair and
+--- chases a player -- it hits even on the platforms, so doprog flees it. (Group
+--- coordination doprog can't do: only 3 may ride a sigil/platform, all the same
+--- colour; healers heal from below; a single death deletes the distributed sigils;
+--- and the final boss leashes to 100% if anyone -- mercs included -- is off his
+--- platform.)
 
 local Quest = require('doprog.domain.quest')
 local S = require('doprog.steps')
@@ -55,14 +62,17 @@ return Quest.new({
     steps = {
         S.pickup({ zone = 'smoke', npc = STARTER, taskName = TASK, request = 'prepared',
             desc = "start Trial of the Speaker's Amphitheater (say \"prepared\" inside)" }),
-        -- Defeat the four sigil-platform named in whatever order they come up.
+        -- Defeat the four sigil-platform named in whatever order they come up,
+        -- fleeing the Tumbling Boulder that spawns between paired named deaths.
         S.combat({ zone = 'smoke', target = nextNamed,
+            mechanics = {
+                { react = 'flee', spawn = { name = 'Tumbling Boulder' }, distance = 40,
+                  desc = 'Tumbling Boulder chases a player (even on platforms) -- run it clear' },
+            },
             desc = 'defeat the 4 sigil named: Moonbreeze/Sunbird/Monsoon/Earthshaker' }),
-        -- All four down: the final sigil ports to the ultimate boss; complete the
-        -- task by defeating it (final boss name is unpublished, so completion is
-        -- gated on the task objective rather than a fabricated spawn name).
-        S.combat({ zone = 'smoke', taskName = TASK,
-            desc = 'use the final sigil and defeat the ultimate boss' }),
+        -- All four down: the Sigil of the Overlord of Ash ports to the final boss.
+        S.combat({ zone = 'smoke', taskName = TASK, target = { name = 'Overlord of Ash', npc = true },
+            desc = 'use the Sigil of the Overlord of Ash and defeat the Overlord of Ash' }),
         S.click({ action = '/multiline ; /itemtarget chest ; /click left item',
             condition = function(ctx) return ctx.task:isComplete(TASK) end,
             desc = 'open the chest to complete the trial' }),
